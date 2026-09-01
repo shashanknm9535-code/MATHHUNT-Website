@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #090d16;
+  --foreground: #f3f4f6;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Mathematical grid background pattern */
+.bg-math-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(31, 41, 55, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 41, 55, 0.25) 1px, transparent 1px);
+}
+
+.math-card {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(31, 41, 55, 0.8);
+  border-radius: 0.5rem;
+}
+
+.math-card-glow {
+  box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.15);
+}
