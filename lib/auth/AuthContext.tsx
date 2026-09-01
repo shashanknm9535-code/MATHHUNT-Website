@@ -17,10 +17,13 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
+// Default context: isAuthenticated=false, isLoading=true.
+// This prevents the login page from reading a "true" default and redirecting
+// before the AuthProvider has a chance to validate the stored token.
 const AuthContext = createContext<AuthContextType>({
-  user: MOCK_ADMIN_USER,
-  isAuthenticated: true,
-  isLoading: false,
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
   isMockAuth: false,
   loginRequiredEndpoint: 'POST /admin/auth/login',
   login: async () => ({ success: false, message: 'Auth not initialized' }),
@@ -36,7 +39,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginRequiredEndpoint = 'POST /admin/auth/login';
 
+  /**
+   * Clears the session atomically and performs a hard navigation to /login.
+   * Uses window.location.replace so the browser history does not contain the
+   * expired dashboard URL — pressing Back will not re-trigger a 401 loop.
+   * Safe to call multiple times: the pathname guard prevents duplicate redirects.
+   */
+  const redirectToLogin = () => {
+    removeStoredToken();
+    setUser(null);
+    setIsAuthenticated(false);
+    setIsMockAuth(false);
+    setIsLoading(false);
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.replace('/login');
+    }
+  };
+
   const refreshUser = async () => {
+    // Mock / demo mode — bypass real token validation entirely
     if (isMockMode()) {
       setUser(MOCK_ADMIN_USER);
       setIsAuthenticated(true);
@@ -47,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const token = getStoredToken();
     if (!token) {
+      // No token stored — show login, do not redirect (may already be on /login)
       setUser(null);
       setIsAuthenticated(false);
       setIsMockAuth(false);
@@ -60,22 +82,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(res.data);
       setIsAuthenticated(true);
       setIsMockAuth(res.isMockData);
+      setIsLoading(false);
     } else {
-      removeStoredToken();
-      setUser(null);
-      setIsAuthenticated(false);
-      setIsMockAuth(false);
+      // Token is expired or invalid — clear and redirect
+      redirectToLogin();
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
+    // Validate stored token on mount
     refreshUser();
 
+    // Listen for centralized 401 events dispatched by fetchApi in client.ts.
+    // Any authenticated API call that receives HTTP 401 fires this event,
+    // ensuring the session is cleared even if the user never calls refreshUser.
     const handleUnauthorized = () => {
-      removeStoredToken();
-      setUser(null);
-      setIsAuthenticated(false);
+      redirectToLogin();
     };
 
     if (typeof window !== 'undefined') {
@@ -87,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.removeEventListener('mathhunt_unauthorized', handleUnauthorized);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (
@@ -112,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return { success: true, message: 'Admin session authenticated successfully.' };
       } else {
-        // Fallback user if getMe is pending
+        // Fallback: construct minimal user from login response if /me is slow/unavailable
         const role: AdminRole = res.data.user?.role || 'ADMIN';
         const fallbackUser: AdminUser = {
           id: res.data.user?.id || 'admin-01',
@@ -134,10 +157,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    removeStoredToken();
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsMockAuth(false);
+    // Clears token, resets state, redirects to /login
+    redirectToLogin();
   };
 
   return (

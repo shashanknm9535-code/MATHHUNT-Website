@@ -11,10 +11,10 @@ import { isMockMode, getApiBaseUrl } from '@/lib/api/client';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
 
-  const [username, setUsername] = useState('admin_username');
-  const [password, setPassword] = useState('admin_password');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusCode, setStatusCode] = useState<number | undefined>(undefined);
@@ -24,10 +24,13 @@ export default function LoginPage() {
   const baseUrl = getApiBaseUrl();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
+    // Only redirect once the auth check is complete — prevents premature redirect
+    // before the stored token has been validated against the backend.
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +51,18 @@ export default function LoginPage() {
       setErrorMessage(result.message || 'Authentication failed.');
     }
   };
+
+  // While the initial token validation is running, show a minimal loading screen
+  // rather than flashing the login form (which might immediately redirect).
+  if (isLoading && !loading) {
+    return (
+      <div className="min-h-screen bg-cyber-dark text-gray-100 flex flex-col items-center justify-center gap-4 bg-math-grid font-mono">
+        <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+        <div className="text-cyan-400 font-bold tracking-widest text-sm">VERIFYING SESSION...</div>
+        <div className="text-gray-500 text-xs">GET /admin/auth/me</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cyber-dark text-gray-100 flex flex-col justify-center items-center p-6 bg-math-grid relative font-mono">
@@ -101,6 +116,7 @@ export default function LoginPage() {
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 pl-9 pr-3 text-gray-200 focus:outline-none focus:border-blue-500"
                 placeholder="admin_username"
                 required
+                autoComplete="username"
                 disabled={loading}
               />
             </div>
@@ -117,6 +133,7 @@ export default function LoginPage() {
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 pl-9 pr-3 text-gray-200 focus:outline-none focus:border-blue-500"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
                 disabled={loading}
               />
             </div>

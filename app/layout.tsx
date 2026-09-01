@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 
 export const metadata: Metadata = {
   title: 'MATHHUNT Admin Control Center | MATHLITE CLUB MVJCE',
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased bg-cyber-dark text-gray-100">{children}</body>
+      <body className="antialiased bg-cyber-dark text-gray-100">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
