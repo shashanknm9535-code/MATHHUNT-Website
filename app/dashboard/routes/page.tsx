@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Route as RouteIcon, MapPin, HelpCircle, Puzzle, Layers, Plus, Loader2 } from 'lucide-react';
 import { MOCK_ROUTES, MOCK_LOCATIONS, MOCK_TEAMS, MOCK_EVENT } from '@/lib/mock/mockData';
 import { AdminSecretNotice } from '@/components/ui/BackendBanner';
@@ -38,7 +38,7 @@ export default function RoutesPage() {
 
   const [assignTeamId, setAssignTeamId] = useState<string>('');
 
-  const fetchRoutesData = async () => {
+  const fetchRoutesData = useCallback(async () => {
     setLoading(true);
     setError(null);
     const [routesRes, locsRes, teamsRes] = await Promise.all([
@@ -67,11 +67,11 @@ export default function RoutesPage() {
         setAssignTeamId(teamsRes.data[0].id);
       }
     }
-  };
+  }, [assignTeamId, newStepDTO.locationId, selectedRoute]);
 
   useEffect(() => {
     fetchRoutesData();
-  }, []);
+  }, [fetchRoutesData]);
 
   const handleCreateRoute = async (e: React.FormEvent) => {
     e.preventDefault();

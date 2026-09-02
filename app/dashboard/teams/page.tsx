@@ -91,10 +91,11 @@ export default function TeamsPage() {
   };
 
   const filteredTeams = teams.filter((t) => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      t.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (t.members && t.members.some((m) => m.name.toLowerCase().includes(searchTerm.toLowerCase())));
+      (t.code?.toLowerCase().includes(searchLower) ?? false) ||
+      (t.name?.toLowerCase().includes(searchLower) ?? false) ||
+      (t.members && t.members.some((m) => m.name?.toLowerCase().includes(searchLower) ?? false));
 
     const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
     return matchesSearch && matchesStatus;

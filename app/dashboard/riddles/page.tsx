@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Puzzle, Plus, MapPin, Loader2, Eye, Lock } from 'lucide-react';
 import { MOCK_RIDDLES, MOCK_LOCATIONS } from '@/lib/mock/mockData';
 import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
@@ -29,7 +29,7 @@ export default function RiddlesPage() {
     active: true,
   });
 
-  const fetchRiddlesData = async () => {
+  const fetchRiddlesData = useCallback(async () => {
     setLoading(true);
     setError(null);
     const [riddlesRes, locsRes] = await Promise.all([
@@ -53,11 +53,11 @@ export default function RiddlesPage() {
         setRiddleDTO((prev) => ({ ...prev, destinationLocationId: locsRes.data![0].id }));
       }
     }
-  };
+  }, [riddleDTO.destinationLocationId]);
 
   useEffect(() => {
     fetchRiddlesData();
-  }, []);
+  }, [fetchRiddlesData]);
 
   const handleSaveRiddle = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -12,7 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   isMockAuth: boolean;
   loginRequiredEndpoint: string;
-  login: (username: string, pass: string) => Promise<{ success: boolean; message?: string }>;
+  login: (_username: string, _pass: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isMockAuth, setIsMockAuth] = useState<boolean>(false);
+  const isRedirectingRef = React.useRef<boolean>(false);
 
   const loginRequiredEndpoint = 'POST /admin/auth/login';
 
@@ -43,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Clears the session atomically and performs a hard navigation to /login.
    * Uses window.location.replace so the browser history does not contain the
    * expired dashboard URL — pressing Back will not re-trigger a 401 loop.
-   * Safe to call multiple times: the pathname guard prevents duplicate redirects.
+   * Safe to call multiple times: the pathname and re-entrancy guards prevent duplicate redirects.
    */
   const redirectToLogin = () => {
     removeStoredToken();
@@ -52,7 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsMockAuth(false);
     setIsLoading(false);
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-      window.location.replace('/login');
+      if (!isRedirectingRef.current) {
+        isRedirectingRef.current = true;
+        window.location.replace('/login');
+      }
     }
   };
 

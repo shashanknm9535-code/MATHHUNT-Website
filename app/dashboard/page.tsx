@@ -22,8 +22,10 @@ import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { eventApi, teamsApi, violationsApi, isMockMode } from '@/lib/api';
 import { Event, Team, Violation } from '@/types';
 import { usePolling } from '@/lib/hooks/usePolling';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function OverviewDashboardPage() {
+  const { isAuthenticated } = useAuth();
   const mock = isMockMode();
   const [event, setEvent] = useState<Event>(MOCK_EVENT);
   const [teams, setTeams] = useState<Team[]>(mock ? MOCK_TEAMS : []);
@@ -53,7 +55,7 @@ export default function OverviewDashboardPage() {
   }, []);
 
   const pollingInterval = parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS || '5000', 10);
-  usePolling(fetchOverviewData, pollingInterval, true);
+  usePolling(fetchOverviewData, pollingInterval, isAuthenticated || mock);
 
   const totalTeams = teams.length;
   const activeTeams = teams.filter((t) => t.status === 'ACTIVE' || t.status === 'SOLVING_MATH').length;
