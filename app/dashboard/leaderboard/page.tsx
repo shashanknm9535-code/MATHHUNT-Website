@@ -4,35 +4,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Medal, Loader2, RefreshCw } from 'lucide-react';
 import { TeamStatusBadge } from '@/components/ui/Badge';
 import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
-import { leaderboardApi, eventApi, isMockMode } from '@/lib/api';
-import { LeaderboardItem, Event } from '@/types';
-import { MOCK_EVENT } from '@/lib/mock/mockData';
+import { leaderboardApi, isMockMode } from '@/lib/api';
+import { LeaderboardItem } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function LeaderboardPage() {
   const mock = isMockMode();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const { events, selectedEventId, setSelectedEventId } = useEvent();
   const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([]);
   const [loading, setLoading] = useState<boolean>(!mock);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch event list for selector
-  useEffect(() => {
-    const initEvents = async () => {
-      const res = await eventApi.listEvents(1, 20);
-      if (res.success && res.data?.items?.length) {
-        setEvents(res.data.items);
-        setSelectedEventId(res.data.items[0].id);
-      } else {
-        setEvents([MOCK_EVENT]);
-        setSelectedEventId(MOCK_EVENT.id);
-      }
-    };
-    initEvents();
-  }, []);
-
   const fetchLeaderboard = useCallback(async () => {
-    if (!selectedEventId) return;
+    if (!selectedEventId) {
+      setLoading(false);
+      setLeaderboard([]);
+      return;
+    }
     setLoading(true);
     setError(null);
 

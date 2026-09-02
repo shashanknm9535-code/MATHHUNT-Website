@@ -9,10 +9,12 @@ import { eventApi, isMockMode } from '@/lib/api';
 import { Event, CreateEventDTO } from '@/types';
 import { formatDate } from '@/lib/utils';
 import { MOCK_EVENT } from '@/lib/mock/mockData';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function EventControlPage() {
   const mock = isMockMode();
-  const [event, setEvent] = useState<Event>(MOCK_EVENT);
+  const { selectedEvent: contextEvent } = useEvent();
+  const [event, setEvent] = useState<Event | null>(mock ? MOCK_EVENT : contextEvent);
   const [loading, setLoading] = useState<boolean>(!mock);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,15 +42,24 @@ export default function EventControlPage() {
     setLoading(false);
     if (res.success && res.data && res.data.items && res.data.items.length > 0) {
       setEvent(res.data.items[0]);
-    } else if (res.error) {
-      setError(res.error);
-      setStatusCode(res.statusCode);
+    } else {
+      setEvent(mock ? MOCK_EVENT : null);
+      if (res.error) {
+        setError(res.error);
+        setStatusCode(res.statusCode);
+      }
     }
   };
 
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (contextEvent) {
+      setEvent(contextEvent);
+    }
+  }, [contextEvent]);
 
   const isDestructive = selectedAction === 'cancel' || selectedAction === 'complete';
 
@@ -135,6 +146,18 @@ export default function EventControlPage() {
           <div className="flex items-center justify-center p-8 gap-3 text-cyan-400 font-mono">
             <Loader2 className="w-6 h-6 animate-spin" />
             <span>FETCHING EVENT STATE FROM NESTJS...</span>
+          </div>
+        ) : !event ? (
+          <div className="p-8 text-center bg-slate-900/50 border border-slate-800 text-gray-400 font-mono space-y-3">
+            <div className="text-gray-300 font-bold">No active competition events found in backend database.</div>
+            <p className="text-xs text-gray-400">Click below to initialize a new competition event.</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg flex items-center gap-2 mx-auto transition"
+            >
+              <Plus className="w-4 h-4" />
+              <span>REGISTER NEW EVENT NOW</span>
+            </button>
           </div>
         ) : (
           <>
@@ -287,14 +310,14 @@ export default function EventControlPage() {
           setEventConfirmName('');
         }}
         title={`CONFIRM EVENT TRANSITION: ${selectedAction?.toUpperCase()}`}
-        requiredEndpoint={`/admin/events/${event.id}/${selectedAction}`}
+        requiredEndpoint={`/admin/events/${event?.id || ''}/${selectedAction}`}
         method="POST"
         isDangerous={isDestructive}
       >
         <div className="space-y-4 text-xs">
           <p className="text-gray-300">
             Execute transition <strong className="text-amber-400 font-mono">{selectedAction?.toUpperCase()}</strong> for{' '}
-            <strong className="text-white">{event.name}</strong>?
+            <strong className="text-white">{event?.name || 'Event'}</strong>?
           </p>
 
           {isDestructive && (
@@ -303,7 +326,7 @@ export default function EventControlPage() {
                 To confirm destructive action, type the exact event name below:
               </label>
               <div className="text-[11px] font-mono text-gray-300 bg-slate-900 p-1.5 rounded">
-                {event.name}
+                {event?.name}
               </div>
               <input
                 type="text"
@@ -328,7 +351,7 @@ export default function EventControlPage() {
             </button>
             <button
               onClick={confirmAction}
-              disabled={submitting || (isDestructive && eventConfirmName !== event.name)}
+              disabled={submitting || (isDestructive && eventConfirmName !== (event?.name || ''))}
               className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white rounded font-bold transition flex items-center gap-1.5"
             >
               {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

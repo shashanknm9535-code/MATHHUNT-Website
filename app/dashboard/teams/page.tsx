@@ -10,10 +10,12 @@ import { teamsApi, isMockMode } from '@/lib/api';
 import { Team, CreateTeamDTO, TeamDetailDTO } from '@/types';
 import { MOCK_TEAMS, MOCK_EVENT } from '@/lib/mock/mockData';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function TeamsPage() {
   const mock = isMockMode();
   const { user } = useAuth();
+  const { selectedEventId } = useEvent();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const [teams, setTeams] = useState<Team[]>(mock ? MOCK_TEAMS : []);
@@ -32,12 +34,18 @@ export default function TeamsPage() {
   const [opModalTarget, setOpModalTarget] = useState<Team | null>(null);
 
   const [newTeamDTO, setNewTeamDTO] = useState<CreateTeamDTO>({
-    eventId: MOCK_EVENT.id,
+    eventId: selectedEventId || (mock ? MOCK_EVENT.id : ''),
     code: 'MH-088',
     name: 'Euler Knights',
     pin: '7890',
     isActive: true,
   });
+
+  useEffect(() => {
+    if (selectedEventId && !newTeamDTO.eventId) {
+      setNewTeamDTO((prev) => ({ ...prev, eventId: selectedEventId }));
+    }
+  }, [selectedEventId, newTeamDTO.eventId]);
 
   const fetchTeams = async () => {
     setLoading(true);

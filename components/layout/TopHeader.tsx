@@ -3,14 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, Server, User, LogOut, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { EventStatusBadge } from '@/components/ui/Badge';
-import { MOCK_EVENT } from '@/lib/mock/mockData';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useEvent } from '@/lib/auth/EventContext';
 import { isMockMode, getApiBaseUrl } from '@/lib/api/client';
 import Link from 'next/link';
 
 export const TopHeader: React.FC = () => {
   const [time, setTime] = useState<string>('');
   const { user, logout, isMockAuth } = useAuth();
+  const { selectedEvent } = useEvent();
   const mock = isMockMode() || isMockAuth;
   const baseUrl = getApiBaseUrl();
 
@@ -38,7 +39,16 @@ export const TopHeader: React.FC = () => {
       <div className="flex items-center gap-4 text-xs">
         <div className="flex items-center gap-2 font-mono">
           <span className="text-gray-400 font-semibold">EVENT:</span>
-          <EventStatusBadge status={MOCK_EVENT.status} />
+          {selectedEvent ? (
+            <>
+              <EventStatusBadge status={selectedEvent.status} />
+              <span className="text-gray-300 font-bold hidden sm:inline max-w-[200px] truncate">{selectedEvent.name}</span>
+            </>
+          ) : (
+            <span className="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded text-[10px]">
+              NO ACTIVE EVENT
+            </span>
+          )}
         </div>
 
         {/* Compact Connection Pill */}

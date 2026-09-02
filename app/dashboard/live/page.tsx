@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Radio, Users, ShieldAlert, Clock, RefreshCw, Eye, Loader2, Award, AlertCircle } from 'lucide-react';
 import { TeamStatusBadge, ViolationTypeBadge } from '@/components/ui/Badge';
 import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { Modal } from '@/components/ui/Modal';
-import { liveApi, eventApi, isMockMode } from '@/lib/api';
-import { LiveMonitoringData, LiveTeamDetail, Event } from '@/types';
+import { liveApi, isMockMode } from '@/lib/api';
+import { LiveMonitoringData, LiveTeamDetail } from '@/types';
 import { usePolling } from '@/lib/hooks/usePolling';
 import { formatDate } from '@/lib/utils';
-import { MOCK_EVENT } from '@/lib/mock/mockData';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function LiveControlPage() {
   const mock = isMockMode();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const { events, selectedEventId, setSelectedEventId } = useEvent();
   const [liveData, setLiveData] = useState<LiveMonitoringData | null>(null);
   const [selectedTeamDetail, setSelectedTeamDetail] = useState<LiveTeamDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
@@ -23,23 +22,11 @@ export default function LiveControlPage() {
   const [staleData, setStaleData] = useState<boolean>(false);
   const [lastPolled, setLastPolled] = useState<string>('');
 
-  // Fetch event list for dropdown selection
-  useEffect(() => {
-    const initEvents = async () => {
-      const res = await eventApi.listEvents(1, 20);
-      if (res.success && res.data?.items?.length) {
-        setEvents(res.data.items);
-        setSelectedEventId(res.data.items[0].id);
-      } else {
-        setEvents([MOCK_EVENT]);
-        setSelectedEventId(MOCK_EVENT.id);
-      }
-    };
-    initEvents();
-  }, []);
-
   const fetchLiveState = useCallback(async () => {
-    if (!selectedEventId) return;
+    if (!selectedEventId) {
+      setLoading(false);
+      return;
+    }
     setError(null);
 
     const res = await liveApi.getLiveMonitoring(selectedEventId);

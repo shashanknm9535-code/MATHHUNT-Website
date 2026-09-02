@@ -3,36 +3,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart3, TrendingUp, Loader2, RefreshCw } from 'lucide-react';
 import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
-import { reportsApi, eventApi, isMockMode } from '@/lib/api';
-import { ScoreReportData, EventReportData, Event } from '@/types';
-import { MOCK_EVENT } from '@/lib/mock/mockData';
+import { reportsApi, isMockMode } from '@/lib/api';
+import { ScoreReportData, EventReportData } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function ReportsPage() {
   const mock = isMockMode();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const { events, selectedEventId, setSelectedEventId } = useEvent();
   const [scoreReport, setScoreReport] = useState<ScoreReportData | null>(null);
   const [eventReport, setEventReport] = useState<EventReportData | null>(null);
   const [loading, setLoading] = useState<boolean>(!mock);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch event list for selector
-  useEffect(() => {
-    const initEvents = async () => {
-      const res = await eventApi.listEvents(1, 20);
-      if (res.success && res.data?.items?.length) {
-        setEvents(res.data.items);
-        setSelectedEventId(res.data.items[0].id);
-      } else {
-        setEvents([MOCK_EVENT]);
-        setSelectedEventId(MOCK_EVENT.id);
-      }
-    };
-    initEvents();
-  }, []);
-
   const fetchReports = useCallback(async () => {
-    if (!selectedEventId) return;
+    if (!selectedEventId) {
+      setLoading(false);
+      setScoreReport(null);
+      setEventReport(null);
+      return;
+    }
     setLoading(true);
     setError(null);
 

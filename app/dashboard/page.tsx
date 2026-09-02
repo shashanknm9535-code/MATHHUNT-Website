@@ -23,11 +23,13 @@ import { eventApi, teamsApi, violationsApi, isMockMode } from '@/lib/api';
 import { Event, Team, Violation } from '@/types';
 import { usePolling } from '@/lib/hooks/usePolling';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function OverviewDashboardPage() {
   const { isAuthenticated } = useAuth();
+  const { selectedEvent } = useEvent();
   const mock = isMockMode();
-  const [event, setEvent] = useState<Event>(MOCK_EVENT);
+  const [event, setEvent] = useState<Event | null>(mock ? MOCK_EVENT : selectedEvent);
   const [teams, setTeams] = useState<Team[]>(mock ? MOCK_TEAMS : []);
   const [violations, setViolations] = useState<Violation[]>(mock ? MOCK_VIOLATIONS : []);
   const [loading, setLoading] = useState<boolean>(!mock);
@@ -45,6 +47,8 @@ export default function OverviewDashboardPage() {
 
     if (eventsRes.success && eventsRes.data?.items?.length) {
       setEvent(eventsRes.data.items[0]);
+    } else if (!mock) {
+      setEvent(selectedEvent || null);
     }
     if (teamsRes.success && teamsRes.data) {
       setTeams(Array.isArray(teamsRes.data) ? teamsRes.data : []);
@@ -81,7 +85,7 @@ export default function OverviewDashboardPage() {
             Competition Overview Dashboard
           </h1>
           <p className="text-gray-400 mt-1">
-            Real-time status monitoring for {event.name}
+            Real-time status monitoring for {event?.name || 'Active Competition'}
           </p>
         </div>
 
@@ -112,14 +116,22 @@ export default function OverviewDashboardPage() {
             <span className="text-gray-400 uppercase tracking-wider text-[10px]">
               CURRENT EVENT LIFECYCLE:
             </span>
-            <EventStatusBadge status={event.status} />
+            {event ? (
+              <EventStatusBadge status={event.status} />
+            ) : (
+              <span className="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded text-[10px]">
+                NO ACTIVE EVENT
+              </span>
+            )}
           </div>
-          <h2 className="text-lg font-bold text-gray-100">{event.name}</h2>
-          <div className="text-gray-400 flex items-center gap-4">
-            <span>Org: {event.organization}</span>
-            <span>•</span>
-            <span className="font-mono">Started: {formatDate(event.startTime)}</span>
-          </div>
+          <h2 className="text-lg font-bold text-gray-100">{event?.name || 'No Competition Event Selected'}</h2>
+          {event && (
+            <div className="text-gray-400 flex items-center gap-4">
+              <span>Org: {event.organization}</span>
+              <span>•</span>
+              <span className="font-mono">Started: {formatDate(event.startTime)}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 font-mono">
