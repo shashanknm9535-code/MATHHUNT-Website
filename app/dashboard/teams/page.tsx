@@ -45,7 +45,7 @@ export default function TeamsPage() {
     const res = await teamsApi.getTeamsList();
     setLoading(false);
     if (res.success && res.data) {
-      setTeams(res.data);
+      setTeams(Array.isArray(res.data) ? res.data : []);
       if (res.message) setNotice(res.message);
     } else if (res.error) {
       setError(res.error);
@@ -90,7 +90,7 @@ export default function TeamsPage() {
     }
   };
 
-  const filteredTeams = teams.filter((t) => {
+  const filteredTeams = (Array.isArray(teams) ? teams : []).filter((t) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       (t.code?.toLowerCase().includes(searchLower) ?? false) ||

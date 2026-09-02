@@ -47,22 +47,29 @@ export default function OverviewDashboardPage() {
       setEvent(eventsRes.data.items[0]);
     }
     if (teamsRes.success && teamsRes.data) {
-      setTeams(teamsRes.data);
+      setTeams(Array.isArray(teamsRes.data) ? teamsRes.data : []);
+    } else {
+      setTeams([]);
     }
     if (violRes.success && violRes.data) {
-      setViolations(violRes.data.items || []);
+      setViolations(Array.isArray(violRes.data.items) ? violRes.data.items : []);
+    } else {
+      setViolations([]);
     }
   }, []);
 
   const pollingInterval = parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS || '5000', 10);
   usePolling(fetchOverviewData, pollingInterval, isAuthenticated || mock);
 
-  const totalTeams = teams.length;
-  const activeTeams = teams.filter((t) => t.status === 'ACTIVE' || t.status === 'SOLVING_MATH').length;
-  const pausedTeams = teams.filter((t) => t.status === 'PAUSED').length;
-  const completedTeams = teams.filter((t) => t.status === 'COMPLETED').length;
-  const disqualifiedTeams = teams.filter((t) => t.status === 'DISQUALIFIED').length;
-  const totalViolations = violations.length;
+  const teamList = Array.isArray(teams) ? teams : [];
+  const violationList = Array.isArray(violations) ? violations : [];
+
+  const totalTeams = teamList.length;
+  const activeTeams = teamList.filter((t) => t.status === 'ACTIVE' || t.status === 'SOLVING_MATH').length;
+  const pausedTeams = teamList.filter((t) => t.status === 'PAUSED').length;
+  const completedTeams = teamList.filter((t) => t.status === 'COMPLETED').length;
+  const disqualifiedTeams = teamList.filter((t) => t.status === 'DISQUALIFIED').length;
+  const totalViolations = violationList.length;
 
   return (
     <div className="space-y-6 font-sans text-xs">
@@ -215,7 +222,7 @@ export default function OverviewDashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
-                  {teams.map((team) => (
+                  {teamList.map((team) => (
                     <tr key={team.id} className="hover:bg-slate-800/40">
                       <td className="py-3 px-3">
                         <div className="font-bold text-gray-200 font-mono">{team.code}</div>

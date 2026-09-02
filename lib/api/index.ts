@@ -109,9 +109,46 @@ export const eventApi = {
         },
       };
     }
-    return fetchApi<PaginatedResponse<Event>>(`/admin/events?page=${page}&limit=${limit}`, {
+    const res = await fetchApi<any>(`/admin/events?page=${page}&limit=${limit}`, {
       method: 'GET',
     });
+
+    let finalRes = res;
+    if (!res.success && res.statusCode === 500) {
+      const fallbackRes = await fetchApi<any>('/admin/events', { method: 'GET' });
+      if (fallbackRes.success) {
+        finalRes = fallbackRes;
+      }
+    }
+
+    if (!finalRes.success) {
+      return {
+        success: false,
+        statusCode: finalRes.statusCode,
+        error: finalRes.error || 'GET /admin/events endpoint error.',
+        isMockData: false,
+      };
+    }
+
+    const items: Event[] = Array.isArray(finalRes.data)
+      ? finalRes.data
+      : (Array.isArray(finalRes.data?.items) ? finalRes.data.items : []);
+
+    const total = finalRes.data?.total ?? items.length;
+    const totalPages = finalRes.data?.totalPages ?? (Math.ceil(total / limit) || 1);
+
+    return {
+      success: true,
+      statusCode: finalRes.statusCode,
+      isMockData: false,
+      data: {
+        items,
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   },
 
   async createEvent(dto: CreateEventDTO): Promise<ApiResponse<Event>> {
@@ -215,16 +252,26 @@ export const teamsApi = {
         data: MOCK_TEAMS,
       };
     }
-    const res = await fetchApi<Team[]>('/admin/teams', { method: 'GET' });
+    const res = await fetchApi<any>('/admin/teams', { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
         isMockData: false,
+        statusCode: res.statusCode,
         error: res.error || 'GET /admin/teams list endpoint unavailable on backend.',
         endpointRequired: 'GET /admin/teams',
       };
     }
-    return res;
+    const items: Team[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: items,
+    };
   },
 };
 
@@ -320,7 +367,19 @@ export const leaderboardApi = {
       };
     }
     const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
-    return fetchApi<LeaderboardItem[]>(`/admin/leaderboard${query}`, { method: 'GET' });
+    const res = await fetchApi<any>(`/admin/leaderboard${query}`, { method: 'GET' });
+    if (!res.success) return res;
+
+    const items: LeaderboardItem[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: items,
+    };
   },
 };
 
@@ -357,7 +416,28 @@ export const violationsApi = {
     if (teamId) params.append('teamId', teamId);
     if (type && type !== 'ALL') params.append('type', type);
 
-    return fetchApi<PaginatedResponse<Violation>>(`/admin/violations?${params.toString()}`, { method: 'GET' });
+    const res = await fetchApi<any>(`/admin/violations?${params.toString()}`, { method: 'GET' });
+    if (!res.success) return res;
+
+    const items: Violation[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    const total = res.data?.total ?? items.length;
+    const totalPages = res.data?.totalPages ?? (Math.ceil(total / limit) || 1);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: {
+        items,
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   },
 
   async getSummary(): Promise<ApiResponse<ViolationSummary>> {
@@ -615,16 +695,26 @@ export const routesApi = {
         data: MOCK_ROUTES,
       };
     }
-    const res = await fetchApi<Route[]>('/admin/routes', { method: 'GET' });
+    const res = await fetchApi<any>('/admin/routes', { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
         isMockData: false,
+        statusCode: res.statusCode,
         error: res.error || 'GET /admin/routes list endpoint unavailable on backend.',
         endpointRequired: 'GET /admin/routes',
       };
     }
-    return res;
+    const items: Route[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: items,
+    };
   },
 };
 
@@ -680,16 +770,26 @@ export const locationsApi = {
         data: MOCK_LOCATIONS,
       };
     }
-    const res = await fetchApi<Location[]>('/admin/locations', { method: 'GET' });
+    const res = await fetchApi<any>('/admin/locations', { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
         isMockData: false,
+        statusCode: res.statusCode,
         error: res.error || 'GET /admin/locations list endpoint unavailable on backend.',
         endpointRequired: 'GET /admin/locations',
       };
     }
-    return res;
+    const items: Location[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: items,
+    };
   },
 };
 
@@ -744,16 +844,26 @@ export const challengesApi = {
         data: MOCK_CHALLENGES,
       };
     }
-    const res = await fetchApi<Challenge[]>('/admin/challenges', { method: 'GET' });
+    const res = await fetchApi<any>('/admin/challenges', { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
         isMockData: false,
+        statusCode: res.statusCode,
         error: res.error || 'GET /admin/challenges list endpoint unavailable on backend.',
         endpointRequired: 'GET /admin/challenges',
       };
     }
-    return res;
+    const items: Challenge[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: items,
+    };
   },
 };
 
@@ -804,16 +914,26 @@ export const riddlesApi = {
         data: MOCK_RIDDLES,
       };
     }
-    const res = await fetchApi<Riddle[]>('/admin/riddles', { method: 'GET' });
+    const res = await fetchApi<any>('/admin/riddles', { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
         isMockData: false,
+        statusCode: res.statusCode,
         error: res.error || 'GET /admin/riddles list endpoint unavailable on backend.',
         endpointRequired: 'GET /admin/riddles',
       };
     }
-    return res;
+    const items: Riddle[] = Array.isArray(res.data)
+      ? res.data
+      : (Array.isArray(res.data?.items) ? res.data.items : []);
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: items,
+    };
   },
 };
 
