@@ -41,6 +41,12 @@ import {
   ForceStatusDTO,
   BackendEndpointStatus,
   TeamStatus,
+  RegisterTeamDTO,
+  RegistrationResponse,
+  EventRegistrationConfig,
+  AdminRegistrationItem,
+  ActivationResultResponse,
+  RegistrationStats,
 } from '@/types';
 import {
   MOCK_EVENT,
@@ -945,3 +951,413 @@ export const diagnosticsApi = {
     return BACKEND_ENDPOINT_COVERAGE;
   },
 };
+
+/**
+ * Public Team Registration Service (POST /auth/register)
+ */
+export const registrationApi = {
+  async getEventConfig(eventId?: string): Promise<ApiResponse<EventRegistrationConfig>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: {
+          id: eventId || MOCK_EVENT.id,
+          name: MOCK_EVENT.name,
+          organization: MOCK_EVENT.organization,
+          college: MOCK_EVENT.college,
+          department: MOCK_EVENT.department,
+          eligibleYears: ['2nd Year', '3rd Year', '4th Year'],
+          sectionsByYear: {
+            '1st Year': ['A', 'B', 'C', 'D'],
+            '2nd Year': ['A', 'B', 'C', 'D'],
+            '3rd Year': ['A', 'B', 'C', 'D'],
+            '4th Year': ['A', 'B', 'C', 'D'],
+          },
+          minTeamSize: 3,
+          maxTeamSize: 4,
+          isOpen: MOCK_EVENT.status === 'READY' || MOCK_EVENT.status === 'LIVE',
+          status: MOCK_EVENT.status,
+        },
+      };
+    }
+
+    const endpoint = eventId ? `/events/${eventId}` : '/events/open';
+    const res = await fetchApi<any>(endpoint, { method: 'GET' });
+
+    if (!res.success) {
+      // Fallback attempt to GET /events if /events/open is not mapped directly
+      const fallbackRes = await fetchApi<any>('/events', { method: 'GET' });
+      if (fallbackRes.success) {
+        const eventsList: Event[] = Array.isArray(fallbackRes.data)
+          ? fallbackRes.data
+          : Array.isArray(fallbackRes.data?.items)
+          ? fallbackRes.data.items
+          : [];
+
+        const targetEvent = eventId
+          ? eventsList.find((e) => e.id === eventId)
+          : eventsList.find((e) => e.status === 'READY' || e.status === 'LIVE') || eventsList[0];
+
+        if (targetEvent) {
+          return {
+            success: true,
+            statusCode: fallbackRes.statusCode,
+            isMockData: false,
+            data: {
+              id: targetEvent.id,
+              name: targetEvent.name,
+              organization: targetEvent.organization,
+              college: targetEvent.college || 'MVJ College of Engineering',
+              department: targetEvent.department || 'Department of Mathematics',
+              eligibleYears: ['2nd Year', '3rd Year', '4th Year'],
+              sectionsByYear: {
+                '1st Year': ['A', 'B', 'C', 'D'],
+                '2nd Year': ['A', 'B', 'C', 'D'],
+                '3rd Year': ['A', 'B', 'C', 'D'],
+                '4th Year': ['A', 'B', 'C', 'D'],
+              },
+              minTeamSize: 3,
+              maxTeamSize: 4,
+              isOpen: targetEvent.status === 'READY' || targetEvent.status === 'LIVE',
+              status: targetEvent.status,
+            },
+          };
+        }
+      }
+
+      return {
+        success: false,
+        statusCode: res.statusCode,
+        error: res.error || 'Unable to retrieve event configuration from server.',
+        isMockData: false,
+      };
+    }
+
+    const evt = res.data;
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: {
+        id: evt.id || eventId || 'evt-default',
+        name: evt.name || 'MATHHUNT 2026',
+        organization: evt.organization || 'MATHLITE CLUB',
+        college: evt.college || 'MVJ College of Engineering',
+        department: evt.department || 'Department of Mathematics',
+        eligibleYears: evt.eligibleYears || ['2nd Year', '3rd Year', '4th Year'],
+        sectionsByYear: evt.sectionsByYear || {
+          '1st Year': ['A', 'B', 'C', 'D'],
+          '2nd Year': ['A', 'B', 'C', 'D'],
+          '3rd Year': ['A', 'B', 'C', 'D'],
+          '4th Year': ['A', 'B', 'C', 'D'],
+        },
+        minTeamSize: evt.minTeamSize || 3,
+        maxTeamSize: evt.maxTeamSize || 4,
+        isOpen: evt.isOpen !== undefined ? evt.isOpen : (evt.status === 'READY' || evt.status === 'LIVE'),
+        status: evt.status || 'LIVE',
+      },
+    };
+  },
+
+  async listOpenEvents(): Promise<ApiResponse<EventRegistrationConfig[]>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: [
+          {
+            id: MOCK_EVENT.id,
+            name: MOCK_EVENT.name,
+            college: MOCK_EVENT.college,
+            eligibleYears: ['2nd Year', '3rd Year', '4th Year'],
+            minTeamSize: 3,
+            maxTeamSize: 4,
+            isOpen: true,
+            status: MOCK_EVENT.status,
+          },
+        ],
+      };
+    }
+
+    const res = await fetchApi<any>('/events/open', { method: 'GET' });
+    if (res.success && Array.isArray(res.data)) {
+      const items: EventRegistrationConfig[] = res.data.map((evt: any) => ({
+        id: evt.id,
+        name: evt.name,
+        college: evt.college || 'MVJ College of Engineering',
+        eligibleYears: evt.eligibleYears || ['2nd Year', '3rd Year', '4th Year'],
+        minTeamSize: evt.minTeamSize || 3,
+        maxTeamSize: evt.maxTeamSize || 4,
+        isOpen: true,
+        status: evt.status || 'LIVE',
+      }));
+      return {
+        success: true,
+        statusCode: res.statusCode,
+        isMockData: false,
+        data: items,
+      };
+    }
+
+    return {
+      success: false,
+      statusCode: res.statusCode,
+      error: res.error || 'Failed to fetch open events list.',
+      isMockData: false,
+    };
+  },
+
+  async registerTeam(dto: RegisterTeamDTO): Promise<ApiResponse<RegistrationResponse>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: {
+          registrationId: `REG-2026-${Math.floor(100000 + Math.random() * 900000)}`,
+          teamName: dto.teamName,
+          eventName: 'MATHHUNT 2026 ANNUAL GRAND CHAMPIONSHIP',
+          qrCodePayload: `MATHHUNT_TEAM_REGISTRATION:${dto.teamName}:${Date.now()}`,
+          emailSent: true,
+          message: 'Team registered successfully in demo mode!',
+        },
+      };
+    }
+
+    return fetchApi<RegistrationResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  },
+};
+
+/**
+ * Admin Registration Check-In & Team Activation Service
+ * Uses backend endpoints:
+ *   GET  /admin/registrations?eventId=...           (list)
+ *   GET  /admin/registrations/lookup?q=...&eventId= (QR / ID lookup)
+ *   POST /admin/registrations/:id/activate          (activate team)
+ *   POST /admin/registrations/:id/resend-credentials (resend email)
+ */
+export const adminRegistrationApi = {
+  async lookupRegistration(
+    query: string,
+    eventId: string
+  ): Promise<ApiResponse<AdminRegistrationItem>> {
+    if (isMockMode()) {
+      // Parse QR payload: MATHHUNT_TEAM_REGISTRATION:<teamName>:<timestamp>
+      const parts = query.split(':');
+      const teamName = parts[1] || 'Matrix Masters';
+      const isActivated = teamName.toLowerCase().includes('activated');
+
+      return {
+        success: true,
+        isMockData: true,
+        data: {
+          id: `reg-demo-001`,
+          registrationId: query.startsWith('REG-') ? query : `REG-2026-${Math.floor(100000 + Math.random() * 900000)}`,
+          eventId: MOCK_EVENT.id,
+          eventName: MOCK_EVENT.name,
+          teamName,
+          college: MOCK_EVENT.college,
+          leader: {
+            name: 'Arjun Sharma',
+            studentId: '1MJ22CS014',
+            email: 'arjun.s@mvjce.edu.in',
+            phone: '+91 9876543210',
+            year: '3rd Year',
+            section: 'A',
+          },
+          members: [
+            { name: 'Priya Nair', studentId: '1MJ22CS089', year: '3rd Year', section: 'A' },
+            { name: 'Rohan Gupta', studentId: '1MJ22EC045', year: '3rd Year', section: 'B' },
+          ],
+          status: isActivated ? 'ACTIVATED' : 'REGISTERED',
+          teamCode: isActivated ? 'MH-001' : undefined,
+          registeredAt: new Date(Date.now() - 3600000).toISOString(),
+          activatedAt: isActivated ? new Date().toISOString() : null,
+          qrCodePayload: query,
+          emailStatus: {
+            registrationEmailSent: true,
+            activationEmailSent: isActivated ? true : undefined,
+            lastError: null,
+          },
+        },
+      };
+    }
+
+    const params = new URLSearchParams({ q: query, eventId });
+    const res = await fetchApi<any>(`/admin/registrations/lookup?${params.toString()}`, {
+      method: 'GET',
+    });
+
+    if (!res.success) {
+      return {
+        success: false,
+        statusCode: res.statusCode,
+        isMockData: false,
+        error: res.error || 'Registration not found. Check the QR code or Registration ID.',
+      };
+    }
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: res.data as AdminRegistrationItem,
+    };
+  },
+
+  async listRegistrations(
+    eventId: string,
+    page = 1,
+    limit = 20,
+    search = '',
+    status = ''
+  ): Promise<ApiResponse<{ items: AdminRegistrationItem[]; total: number; totalPages: number; stats: RegistrationStats }>> {
+    if (isMockMode()) {
+      const mockItems: AdminRegistrationItem[] = MOCK_TEAMS.map((t, idx) => ({
+        id: `reg-${t.id}`,
+        registrationId: `REG-2026-${100000 + idx}`,
+        eventId: MOCK_EVENT.id,
+        eventName: MOCK_EVENT.name,
+        teamName: t.name,
+        college: MOCK_EVENT.college,
+        leader: {
+          name: t.members[0]?.name || 'Team Leader',
+          studentId: t.members[0]?.studentId || 'USN001',
+          email: `${(t.members[0]?.name || 'leader').toLowerCase().replace(/\s/g, '.')}@mvjce.edu.in`,
+          phone: '+91 9876543210',
+          year: '3rd Year',
+          section: 'A',
+        },
+        members: t.members.slice(1).map((m) => ({
+          name: m.name,
+          studentId: m.studentId || 'USN000',
+          year: '3rd Year',
+          section: 'B',
+        })),
+        status: idx < 3 ? 'ACTIVATED' : 'REGISTERED',
+        teamCode: idx < 3 ? t.code : undefined,
+        registeredAt: new Date(Date.now() - (idx + 1) * 3600000).toISOString(),
+        activatedAt: idx < 3 ? new Date(Date.now() - idx * 1800000).toISOString() : null,
+        emailStatus: {
+          registrationEmailSent: true,
+          activationEmailSent: idx < 3,
+          lastError: idx === 2 ? 'SMTP timeout' : null,
+        },
+      }));
+
+      const filtered = mockItems.filter((item) => {
+        const matchSearch =
+          !search ||
+          item.teamName.toLowerCase().includes(search.toLowerCase()) ||
+          item.registrationId.toLowerCase().includes(search.toLowerCase()) ||
+          item.leader.name.toLowerCase().includes(search.toLowerCase());
+        const matchStatus = !status || item.status === status;
+        return matchSearch && matchStatus;
+      });
+
+      return {
+        success: true,
+        isMockData: true,
+        data: {
+          items: filtered.slice((page - 1) * limit, page * limit),
+          total: filtered.length,
+          totalPages: Math.ceil(filtered.length / limit) || 1,
+          stats: {
+            totalRegistered: mockItems.length,
+            activatedCount: mockItems.filter((i) => i.status === 'ACTIVATED').length,
+            pendingCount: mockItems.filter((i) => i.status === 'REGISTERED').length,
+            emailFailuresCount: mockItems.filter((i) => i.emailStatus.lastError).length,
+          },
+        },
+      };
+    }
+
+    const params = new URLSearchParams({ eventId, page: String(page), limit: String(limit) });
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+
+    const res = await fetchApi<any>(`/admin/registrations?${params.toString()}`, { method: 'GET' });
+
+    if (!res.success) {
+      return {
+        success: false,
+        statusCode: res.statusCode,
+        isMockData: false,
+        error: res.error || 'Failed to fetch registrations list from backend.',
+        endpointRequired: 'GET /admin/registrations',
+      };
+    }
+
+    const items: AdminRegistrationItem[] = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.items)
+      ? res.data.items
+      : [];
+
+    const total = res.data?.total ?? items.length;
+    const totalPages = (res.data?.totalPages ?? Math.ceil(total / limit)) || 1;
+    const stats: RegistrationStats = res.data?.stats ?? {
+      totalRegistered: total,
+      activatedCount: items.filter((i) => i.status === 'ACTIVATED').length,
+      pendingCount: items.filter((i) => i.status === 'REGISTERED').length,
+      emailFailuresCount: items.filter((i) => i.emailStatus?.lastError).length,
+    };
+
+    return {
+      success: true,
+      statusCode: res.statusCode,
+      isMockData: false,
+      data: { items, total, totalPages, stats },
+    };
+  },
+
+  async activateTeam(
+    registrationId: string,
+    eventId: string
+  ): Promise<ApiResponse<ActivationResultResponse>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: {
+          success: true,
+          registrationId,
+          teamId: `tid-${Date.now()}`,
+          teamCode: `MH-${Math.floor(100 + Math.random() * 900)}`,
+          status: 'ACTIVATED',
+          activatedAt: new Date().toISOString(),
+          emailSent: true,
+          message: 'Team activated in demo mode. Credentials dispatched to leader email.',
+        },
+      };
+    }
+
+    return fetchApi<ActivationResultResponse>(
+      `/admin/registrations/${registrationId}/activate`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ eventId }),
+      }
+    );
+  },
+
+  async resendCredentials(registrationId: string): Promise<ApiResponse<{ sent: boolean; message?: string }>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: { sent: true, message: 'Credentials resent in demo mode.' },
+      };
+    }
+
+    return fetchApi<{ sent: boolean; message?: string }>(
+      `/admin/registrations/${registrationId}/resend-credentials`,
+      { method: 'POST' }
+    );
+  },
+};
+
+

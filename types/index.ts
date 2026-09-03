@@ -424,3 +424,110 @@ export interface ForceStatusDTO {
   status: TeamStatus;
   reason?: string;
 }
+
+// Public Team Registration Types (POST /auth/register)
+export interface RegisterTeamLeaderDTO {
+  name: string;
+  studentId: string;
+  email: string;
+  phone: string;
+  year: string;
+  section: string;
+}
+
+export interface RegisterTeamMemberDTO {
+  name: string;
+  studentId: string;
+  year: string;
+  section: string;
+}
+
+export interface RegisterTeamDTO {
+  eventId: string;
+  teamName: string;
+  leader: RegisterTeamLeaderDTO;
+  members: RegisterTeamMemberDTO[];
+}
+
+export interface RegistrationResponse {
+  registrationId?: string;
+  id?: string;
+  teamName?: string;
+  name?: string;
+  eventName?: string;
+  qrCodePayload?: string;
+  qrCodeUrl?: string;
+  emailSent?: boolean;
+  message?: string;
+}
+
+export interface EventRegistrationConfig {
+  id: string;
+  name: string;
+  organization?: string;
+  college: string;
+  department?: string;
+  eligibleYears: string[];
+  sectionsByYear?: Record<string, string[]>;
+  minTeamSize: number;
+  maxTeamSize: number;
+  isOpen: boolean;
+  status: EventStatus;
+}
+
+// Admin Registration Check-In & Activation Types
+export type RegistrationStatus = 'REGISTERED' | 'ACTIVATED';
+
+export interface AdminRegistrationMember {
+  name: string;
+  studentId: string;
+  year: string;
+  section: string;
+}
+
+export interface AdminRegistrationLeader extends AdminRegistrationMember {
+  email: string;
+  phone: string;
+}
+
+export interface AdminRegistrationItem {
+  id: string;
+  registrationId: string;
+  eventId: string;
+  eventName: string;
+  teamName: string;
+  college: string;
+  leader: AdminRegistrationLeader;
+  members: AdminRegistrationMember[];
+  status: RegistrationStatus;
+  teamCode?: string; // Authoritative Team ID (e.g., MH-042) generated on activation
+  teamId?: string;
+  registeredAt: string;
+  activatedAt?: string | null;
+  qrCodePayload?: string;
+  emailStatus: {
+    registrationEmailSent: boolean;
+    activationEmailSent?: boolean;
+    lastError?: string | null;
+  };
+}
+
+export interface ActivationResultResponse {
+  success: boolean;
+  registrationId: string;
+  teamId?: string;
+  teamCode?: string; // Authoritative Team ID (e.g. MH-042)
+  status: RegistrationStatus;
+  activatedAt: string;
+  emailSent: boolean;
+  message?: string;
+}
+
+export interface RegistrationStats {
+  totalRegistered: number;
+  activatedCount: number;
+  pendingCount: number;
+  emailFailuresCount: number;
+}
+
+

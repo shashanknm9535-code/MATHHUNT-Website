@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   PlaySquare,
   Users,
+  ClipboardCheck,
   Route,
   MapPin,
   HelpCircle,
@@ -30,6 +31,7 @@ const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard/event', label: 'Event Control', icon: PlaySquare },
   { href: '/dashboard/teams', label: 'Teams Roster', icon: Users },
+  { href: '/dashboard/registrations', label: 'Registrations', icon: ClipboardCheck, badge: 'CHECK-IN' },
   { href: '/dashboard/routes', label: 'Routes & Steps', icon: Route },
   { href: '/dashboard/locations', label: 'Locations & QR', icon: MapPin },
   { href: '/dashboard/challenges', label: 'Math Challenges', icon: HelpCircle },
@@ -116,7 +118,11 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-950 text-emerald-400 border border-emerald-800 animate-pulse">
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded border ${
+                  item.badge === 'LIVE'
+                    ? 'bg-emerald-950 text-emerald-400 border-emerald-800 animate-pulse'
+                    : 'bg-cyan-950 text-cyan-400 border-cyan-800'
+                }`}>
                   {item.badge}
                 </span>
               )}
