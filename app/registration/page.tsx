@@ -28,10 +28,18 @@ import { registrationApi } from '@/lib/api';
 import {
   EventRegistrationConfig,
   RegisterTeamDTO,
-  RegisterTeamLeaderDTO,
   RegistrationResponse,
 } from '@/types';
 import { RegistrationQR } from '@/components/registration/RegistrationQR';
+
+interface FormLeaderState {
+  name: string;
+  studentId: string;
+  email: string;
+  phone: string;
+  year: string;
+  section: string;
+}
 
 interface FormMemberState {
   id: string;
@@ -56,7 +64,7 @@ function RegistrationContent() {
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
 
   // Team Leader State (Member 1)
-  const [leader, setLeader] = useState<RegisterTeamLeaderDTO>({
+  const [leader, setLeader] = useState<FormLeaderState>({
     name: '',
     studentId: '',
     email: '',
@@ -165,7 +173,7 @@ function RegistrationContent() {
   };
 
   // Field change handlers
-  const handleLeaderChange = (field: keyof RegisterTeamLeaderDTO, value: string) => {
+  const handleLeaderChange = (field: keyof FormLeaderState, value: string) => {
     setLeader((prev) => {
       const updated = { ...prev, [field]: value };
       if (field === 'year') {
@@ -294,17 +302,15 @@ function RegistrationContent() {
     const dto: RegisterTeamDTO = {
       eventId: eventConfig.id,
       teamName: teamName.trim(),
-      leader: {
-        name: leader.name.trim(),
-        studentId: leader.studentId.trim().toUpperCase(),
-        email: leader.email.trim().toLowerCase(),
-        phone: leader.phone.trim(),
-        year: leader.year,
-        section: leader.section,
-      },
+      leaderName: leader.name.trim(),
+      leaderEmail: leader.email.trim().toLowerCase(),
+      leaderPhone: leader.phone.trim(),
+      leaderUsn: leader.studentId.trim().toUpperCase(),
+      leaderYear: leader.year,
+      leaderSection: leader.section,
       members: members.map((m) => ({
         name: m.name.trim(),
-        studentId: m.studentId.trim().toUpperCase(),
+        usn: m.studentId.trim().toUpperCase(),
         year: m.year,
         section: m.section,
       })),
