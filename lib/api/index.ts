@@ -982,80 +982,54 @@ export const registrationApi = {
       };
     }
 
-    const endpoint = eventId ? `/events/${eventId}` : '/events/open';
+    const endpoint = eventId
+      ? `/events/${eventId}/registration`
+      : `/events/open/registration`;
+
     const res = await fetchApi<any>(endpoint, { method: 'GET' });
 
     if (!res.success) {
-      // Fallback attempt to GET /events if /events/open is not mapped directly
-      const fallbackRes = await fetchApi<any>('/events', { method: 'GET' });
-      if (fallbackRes.success) {
-        const eventsList: Event[] = Array.isArray(fallbackRes.data)
-          ? fallbackRes.data
-          : Array.isArray(fallbackRes.data?.items)
-          ? fallbackRes.data.items
-          : [];
-
-        const targetEvent = eventId
-          ? eventsList.find((e) => e.id === eventId)
-          : eventsList.find((e) => e.status === 'READY' || e.status === 'LIVE') || eventsList[0];
-
-        if (targetEvent) {
-          return {
-            success: true,
-            statusCode: fallbackRes.statusCode,
-            isMockData: false,
-            data: {
-              id: targetEvent.id,
-              name: targetEvent.name,
-              organization: targetEvent.organization,
-              college: targetEvent.college || 'MVJ College of Engineering',
-              department: targetEvent.department || 'Department of Mathematics',
-              eligibleYears: ['2nd Year', '3rd Year', '4th Year'],
-              sectionsByYear: {
-                '1st Year': ['A', 'B', 'C', 'D'],
-                '2nd Year': ['A', 'B', 'C', 'D'],
-                '3rd Year': ['A', 'B', 'C', 'D'],
-                '4th Year': ['A', 'B', 'C', 'D'],
-              },
-              minTeamSize: 3,
-              maxTeamSize: 4,
-              isOpen: targetEvent.status === 'READY' || targetEvent.status === 'LIVE',
-              status: targetEvent.status,
-            },
-          };
-        }
-      }
-
       return {
         success: false,
         statusCode: res.statusCode,
-        error: res.error || 'Unable to retrieve event configuration from server.',
+        error: res.error || (eventId ? `Event registration unavailable for event ${eventId}.` : 'No open events available for registration.'),
         isMockData: false,
       };
     }
 
     const evt = res.data;
+    const isOpen =
+      evt.isOpen !== undefined
+        ? Boolean(evt.isOpen)
+        : evt.isRegistrationOpen !== undefined
+        ? Boolean(evt.isRegistrationOpen)
+        : evt.status === 'READY' || evt.status === 'LIVE' || evt.status === 'OPEN';
+
     return {
       success: true,
       statusCode: res.statusCode,
       isMockData: false,
       data: {
-        id: evt.id || eventId || 'evt-default',
-        name: evt.name || 'MATHHUNT 2026',
+        id: evt.id || evt.eventId || eventId || 'evt-default',
+        name: evt.name || evt.eventName || evt.title || 'MATHHUNT 2026',
         organization: evt.organization || 'MATHLITE CLUB',
-        college: evt.college || 'MVJ College of Engineering',
+        college: evt.college || evt.institution || 'MVJ College of Engineering',
         department: evt.department || 'Department of Mathematics',
-        eligibleYears: evt.eligibleYears || ['2nd Year', '3rd Year', '4th Year'],
-        sectionsByYear: evt.sectionsByYear || {
+        eligibleYears: Array.isArray(evt.eligibleYears)
+          ? evt.eligibleYears
+          : Array.isArray(evt.years)
+          ? evt.years
+          : ['1st Year', '2nd Year', '3rd Year', '4th Year'],
+        sectionsByYear: evt.sectionsByYear || evt.sections || {
           '1st Year': ['A', 'B', 'C', 'D'],
           '2nd Year': ['A', 'B', 'C', 'D'],
           '3rd Year': ['A', 'B', 'C', 'D'],
           '4th Year': ['A', 'B', 'C', 'D'],
         },
-        minTeamSize: evt.minTeamSize || 3,
-        maxTeamSize: evt.maxTeamSize || 4,
-        isOpen: evt.isOpen !== undefined ? evt.isOpen : (evt.status === 'READY' || evt.status === 'LIVE'),
-        status: evt.status || 'LIVE',
+        minTeamSize: evt.minTeamSize ?? evt.minSize ?? 3,
+        maxTeamSize: evt.maxTeamSize ?? evt.maxSize ?? 4,
+        isOpen,
+        status: evt.status || (isOpen ? 'LIVE' : 'COMPLETED'),
       },
     };
   },
