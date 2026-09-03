@@ -230,16 +230,10 @@ function RegistrationContent() {
     // 2. Leader Validation
     const newLeaderErrors: Record<string, string> = {};
     if (!leader.name.trim()) newLeaderErrors.name = 'Leader full name is required.';
-    if (!leader.studentId.trim()) newLeaderErrors.studentId = 'USN / Student ID is required.';
     if (!leader.email.trim()) {
       newLeaderErrors.email = 'Email address is required.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leader.email.trim())) {
       newLeaderErrors.email = 'Please enter a valid email address.';
-    }
-    if (!leader.phone.trim()) {
-      newLeaderErrors.phone = 'Phone number is required.';
-    } else if (!/^\+?[0-9]{10,14}$/.test(leader.phone.trim().replace(/[\s-]/g, ''))) {
-      newLeaderErrors.phone = 'Please enter a valid phone number.';
     }
     if (!leader.year) newLeaderErrors.year = 'Year selection is required.';
     if (!leader.section) newLeaderErrors.section = 'Section selection is required.';
@@ -254,7 +248,6 @@ function RegistrationContent() {
     members.forEach((m, idx) => {
       const errs: Record<string, string> = {};
       if (!m.name.trim()) errs.name = `Member ${idx + 2} full name is required.`;
-      if (!m.studentId.trim()) errs.studentId = `Member ${idx + 2} USN is required.`;
       if (!m.year) errs.year = 'Year is required.';
       if (!m.section) errs.section = 'Section is required.';
 
@@ -304,13 +297,10 @@ function RegistrationContent() {
       teamName: teamName.trim(),
       leaderName: leader.name.trim(),
       leaderEmail: leader.email.trim().toLowerCase(),
-      leaderPhone: leader.phone.trim(),
-      leaderUsn: leader.studentId.trim().toUpperCase(),
       leaderYear: leader.year,
       leaderSection: leader.section,
       members: members.map((m) => ({
         name: m.name.trim(),
-        usn: m.studentId.trim().toUpperCase(),
         year: m.year,
         section: m.section,
       })),

@@ -428,7 +428,6 @@ export interface ForceStatusDTO {
 // Public Team Registration Types (POST /auth/register)
 export interface RegisterTeamMemberDTO {
   name: string;
-  usn: string;
   year: string;
   section: string;
 }
@@ -438,8 +437,6 @@ export interface RegisterTeamDTO {
   teamName: string;
   leaderName: string;
   leaderEmail: string;
-  leaderPhone?: string;
-  leaderUsn?: string;
   leaderYear: string;
   leaderSection: string;
   members: RegisterTeamMemberDTO[];
