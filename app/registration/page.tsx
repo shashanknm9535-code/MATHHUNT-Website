@@ -517,14 +517,14 @@ function RegistrationContent() {
           <form onSubmit={handleSubmit} className="space-y-8">
             
             {/* 1. EVENT INFORMATION LOCKED CARD */}
-            <div className="math-card p-6 sm:p-8 space-y-5 border-blue-500/30 bg-gray-900/80 shadow-lg relative overflow-hidden">
+            <div className="math-card p-4 sm:p-6 lg:p-8 space-y-5 border-blue-500/30 bg-gray-900/80 shadow-lg relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                     <Calendar className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Event Information</h3>
+                    <h3 className="text-base sm:text-lg font-bold text-white">Event Information</h3>
                     <p className="text-xs text-gray-400">Locked by Event Control Configuration</p>
                   </div>
                 </div>
@@ -540,7 +540,7 @@ function RegistrationContent() {
                     <span>Event</span>
                     <Lock className="w-2.5 h-2.5 text-gray-500" />
                   </span>
-                  <p className="text-xs sm:text-sm font-bold text-cyan-300 truncate">{eventConfig.name}</p>
+                  <p className="text-xs sm:text-sm font-bold text-cyan-300 break-words">{eventConfig.name}</p>
                 </div>
 
                 <div className="p-3.5 rounded-lg bg-gray-950/60 border border-gray-800 space-y-1">
@@ -549,7 +549,7 @@ function RegistrationContent() {
                     <span>College</span>
                     <Lock className="w-2.5 h-2.5 text-gray-500" />
                   </span>
-                  <p className="text-xs sm:text-sm font-bold text-white truncate">{eventConfig.college}</p>
+                  <p className="text-xs sm:text-sm font-bold text-white break-words">{eventConfig.college}</p>
                 </div>
 
                 <div className="p-3.5 rounded-lg bg-gray-950/60 border border-gray-800 space-y-1">
@@ -558,7 +558,7 @@ function RegistrationContent() {
                     <span>Eligibility / Year</span>
                     <Lock className="w-2.5 h-2.5 text-gray-500" />
                   </span>
-                  <p className="text-xs sm:text-sm font-bold text-white truncate">
+                  <p className="text-xs sm:text-sm font-bold text-white break-words">
                     {eventConfig.eligibleYears.join(', ')}
                   </p>
                 </div>
@@ -569,7 +569,7 @@ function RegistrationContent() {
                     <span>Team Size</span>
                     <Lock className="w-2.5 h-2.5 text-gray-500" />
                   </span>
-                  <p className="text-xs sm:text-sm font-bold text-emerald-400 truncate">
+                  <p className="text-xs sm:text-sm font-bold text-emerald-400 break-words">
                     {eventConfig.minTeamSize}–{eventConfig.maxTeamSize} members
                   </p>
                 </div>
@@ -577,13 +577,13 @@ function RegistrationContent() {
             </div>
 
             {/* 2. TEAM DETAILS */}
-            <div className="math-card p-6 sm:p-8 space-y-5 border-cyan-500/20 bg-gray-900/80">
+            <div className="math-card p-4 sm:p-6 lg:p-8 space-y-5 border-cyan-500/20 bg-gray-900/80">
               <div className="flex items-center space-x-3 border-b border-cyan-500/20 pb-4">
                 <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Team Details</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-white">Team Details</h3>
                   <p className="text-xs text-gray-400">Specify your official registered team name</p>
                 </div>
               </div>
@@ -606,7 +606,7 @@ function RegistrationContent() {
                       : 'border-gray-800 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500'
                   }`}
                 />
-                <div className="flex items-center justify-between text-xs mt-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs mt-1">
                   <p className="text-gray-400 italic">Team name must be unique for this event.</p>
                   {teamNameError && <p className="text-red-400 font-medium">{teamNameError}</p>}
                 </div>
@@ -614,7 +614,7 @@ function RegistrationContent() {
             </div>
 
             {/* 3. TEAM LEADER (MEMBER 1) */}
-            <div className="math-card p-6 sm:p-8 space-y-5 border-cyan-500/20 bg-gray-900/80">
+            <div className="math-card p-4 sm:p-6 lg:p-8 space-y-5 border-cyan-500/20 bg-gray-900/80">
               <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
@@ -753,14 +753,14 @@ function RegistrationContent() {
             </div>
 
             {/* 4. TEAM MEMBERS */}
-            <div className="math-card p-6 sm:p-8 space-y-6 border-cyan-500/20 bg-gray-900/80">
+            <div className="math-card p-4 sm:p-6 lg:p-8 space-y-6 border-cyan-500/20 bg-gray-900/80">
               <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                     <UserPlus className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Team Members</h3>
+                    <h3 className="text-base sm:text-lg font-bold text-white">Team Members</h3>
                     <p className="text-xs text-gray-400">
                       Total team size must be between {eventConfig.minTeamSize} and {eventConfig.maxTeamSize} members
                     </p>
@@ -781,7 +781,7 @@ function RegistrationContent() {
                   return (
                     <div
                       key={m.id}
-                      className="p-4 sm:p-5 rounded-xl bg-gray-950/70 border border-gray-800 space-y-4 relative group hover:border-cyan-500/30 transition-all"
+                      className="p-3.5 sm:p-5 rounded-xl bg-gray-950/70 border border-gray-800 space-y-4 relative group hover:border-cyan-500/30 transition-all"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -913,13 +913,13 @@ function RegistrationContent() {
             </div>
 
             {/* 5. CONFIRMATION */}
-            <div className="math-card p-6 sm:p-8 space-y-4 border-cyan-500/20 bg-gray-900/80">
+            <div className="math-card p-4 sm:p-6 lg:p-8 space-y-4 border-cyan-500/20 bg-gray-900/80">
               <div className="flex items-center space-x-3 border-b border-cyan-500/20 pb-4">
                 <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Confirmation</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-white">Confirmation</h3>
                   <p className="text-xs text-gray-400">All three confirmations are required to submit registration</p>
                 </div>
               </div>

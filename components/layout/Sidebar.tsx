@@ -21,10 +21,12 @@ import {
   Building2,
   GraduationCap,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MOCK_ORGANIZATION } from '@/lib/mock/mockData';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useSidebar } from '@/components/layout/SidebarContext';
 import { isMockMode, getApiBaseUrl } from '@/lib/api/client';
 
 const navItems = [
@@ -44,16 +46,16 @@ const navItems = [
   { href: '/dashboard/settings', label: 'System Settings', icon: Settings },
 ];
 
-export const Sidebar: React.FC = () => {
+const SidebarInner: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const pathname = usePathname();
   const { user, isMockAuth } = useAuth();
   const mock = isMockMode() || isMockAuth;
   const baseUrl = getApiBaseUrl();
 
   return (
-    <aside className="w-72 bg-cyber-card border-r border-cyber-border flex flex-col h-screen sticky top-0 shrink-0 select-none font-mono">
+    <div className="w-72 bg-cyber-card border-r border-cyber-border flex flex-col h-full shrink-0 select-none font-mono">
       {/* Brand Header */}
-      <div className="p-4 border-b border-cyber-border bg-slate-900/90">
+      <div className="p-4 border-b border-cyber-border bg-slate-900/90 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-400">
             <Calculator className="w-6 h-6" />
@@ -74,20 +76,29 @@ export const Sidebar: React.FC = () => {
             </div>
           </div>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
 
-        {/* Organization Info */}
-        <div className="mt-3 pt-3 border-t border-slate-800 text-[11px] space-y-1 text-gray-400">
-          <div className="flex items-center gap-1.5 text-gray-300 font-semibold">
-            <GraduationCap className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            <span>{MOCK_ORGANIZATION.club}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-gray-400">
-            <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-            <span>{MOCK_ORGANIZATION.department}</span>
-          </div>
-          <div className="text-[10px] text-gray-500 pl-5">
-            {MOCK_ORGANIZATION.college}
-          </div>
+      {/* Organization Info */}
+      <div className="px-4 py-3 border-b border-slate-800 text-[11px] space-y-1 text-gray-400 bg-slate-950/40">
+        <div className="flex items-center gap-1.5 text-gray-300 font-semibold">
+          <GraduationCap className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          <span>{MOCK_ORGANIZATION.club}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-gray-400">
+          <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <span>{MOCK_ORGANIZATION.department}</span>
+        </div>
+        <div className="text-[10px] text-gray-500 pl-5">
+          {MOCK_ORGANIZATION.college}
         </div>
       </div>
 
@@ -101,6 +112,7 @@ export const Sidebar: React.FC = () => {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all group',
                 isActive
@@ -149,6 +161,34 @@ export const Sidebar: React.FC = () => {
           Target: {baseUrl}
         </p>
       </div>
-    </aside>
+    </div>
+  );
+};
+
+export const Sidebar: React.FC = () => {
+  const { isMobileOpen, closeMobileMenu } = useSidebar();
+
+  return (
+    <>
+      {/* Desktop Permanent Sticky Sidebar */}
+      <aside className="hidden lg:block h-screen sticky top-0 shrink-0">
+        <SidebarInner />
+      </aside>
+
+      {/* Mobile Slide-Over Drawer Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={closeMobileMenu}
+          />
+          {/* Drawer Content */}
+          <div className="relative z-10 h-full shadow-2xl animate-in slide-in-from-left duration-200">
+            <SidebarInner onClose={closeMobileMenu} />
+          </div>
+        </div>
+      )}
+    </>
   );
 };

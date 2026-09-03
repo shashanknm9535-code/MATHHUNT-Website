@@ -112,10 +112,10 @@ const RegistrationDetailsCard: React.FC<{
 
       <div className="p-5 space-y-5">
         {/* Top meta row */}
-        <div className="grid grid-cols-2 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="p-3 rounded-xl bg-gray-800/50 border border-gray-700 space-y-1">
             <p className="text-gray-400 uppercase font-semibold tracking-wider text-[10px]">Registration ID</p>
-            <p className="font-mono font-bold text-cyan-300">{reg.registrationId}</p>
+            <p className="font-mono font-bold text-cyan-300 break-all">{reg.registrationId}</p>
           </div>
           <div className="p-3 rounded-xl bg-gray-800/50 border border-gray-700 space-y-1">
             <p className="text-gray-400 uppercase font-semibold tracking-wider text-[10px]">Event</p>
@@ -142,10 +142,10 @@ const RegistrationDetailsCard: React.FC<{
             <UserCheck className="w-3 h-3 text-cyan-500" />
             <span>Team Leader</span>
           </h4>
-          <div className="p-4 rounded-xl bg-gray-800/40 border border-gray-700 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+          <div className="p-4 rounded-xl bg-gray-800/40 border border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
             <div><span className="text-gray-400">Name</span><p className="font-semibold text-white">{reg.leader.name}</p></div>
-            <div><span className="text-gray-400">USN / Student ID</span><p className="font-mono text-white">{reg.leader.studentId}</p></div>
-            <div><span className="text-gray-400">Email</span><p className="text-cyan-300 font-mono truncate">{reg.leader.email}</p></div>
+            <div><span className="text-gray-400">USN / Student ID</span><p className="font-mono text-white break-all">{reg.leader.studentId}</p></div>
+            <div><span className="text-gray-400">Email</span><p className="text-cyan-300 font-mono break-all">{reg.leader.email}</p></div>
             <div><span className="text-gray-400">Phone</span><p className="text-gray-200">{reg.leader.phone}</p></div>
             <div><span className="text-gray-400">Year</span><p className="text-gray-200">{reg.leader.year}</p></div>
             <div><span className="text-gray-400">Section</span><p className="text-gray-200">{reg.leader.section}</p></div>
@@ -163,15 +163,15 @@ const RegistrationDetailsCard: React.FC<{
               {reg.members.map((m, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl bg-gray-800/40 border border-gray-700 grid grid-cols-2 gap-x-4 gap-y-1 text-xs"
+                  className="p-3 rounded-xl bg-gray-800/40 border border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs"
                 >
-                  <div className="col-span-2 flex items-center space-x-2 mb-1">
+                  <div className="sm:col-span-2 flex items-center space-x-2 mb-1">
                     <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-[10px] font-bold flex items-center justify-center border border-cyan-500/30">
                       {idx + 2}
                     </span>
                     <span className="font-semibold text-white">{m.name}</span>
                   </div>
-                  <div><span className="text-gray-400">USN</span><p className="font-mono text-gray-200">{m.studentId}</p></div>
+                  <div><span className="text-gray-400">USN</span><p className="font-mono text-gray-200 break-all">{m.studentId}</p></div>
                   <div><span className="text-gray-400">Year / Section</span><p className="text-gray-200">{m.year} · Section {m.section}</p></div>
                 </div>
               ))}

@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopHeader } from '@/components/layout/TopHeader';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { EventProvider } from '@/lib/auth/EventContext';
+import { SidebarProvider } from '@/components/layout/SidebarContext';
 import { isMockMode } from '@/lib/api/client';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -42,13 +43,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <EventProvider>
-      <div className="flex min-h-screen bg-cyber-dark text-gray-100 bg-math-grid">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <TopHeader />
-          <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+      <SidebarProvider>
+        <div className="flex min-h-screen bg-cyber-dark text-gray-100 bg-math-grid">
+          <Sidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <TopHeader />
+            <main className="flex-1 p-3 sm:p-6 overflow-y-auto">{children}</main>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     </EventProvider>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Clock, Server, User, LogOut, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Clock, Server, User, LogOut, ShieldCheck, AlertTriangle, Menu } from 'lucide-react';
 import { EventStatusBadge } from '@/components/ui/Badge';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEvent } from '@/lib/auth/EventContext';
+import { useSidebar } from '@/components/layout/SidebarContext';
 import { isMockMode, getApiBaseUrl } from '@/lib/api/client';
 import Link from 'next/link';
 
@@ -12,6 +13,7 @@ export const TopHeader: React.FC = () => {
   const [time, setTime] = useState<string>('');
   const { user, logout, isMockAuth } = useAuth();
   const { selectedEvent } = useEvent();
+  const { toggleMobileMenu } = useSidebar();
   const mock = isMockMode() || isMockAuth;
   const baseUrl = getApiBaseUrl();
 
@@ -34,15 +36,25 @@ export const TopHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="h-16 bg-cyber-card border-b border-cyber-border px-6 flex items-center justify-between sticky top-0 z-40 backdrop-blur-md bg-slate-900/90 font-sans">
-      {/* Event & System Status */}
-      <div className="flex items-center gap-4 text-xs">
+    <header className="h-16 bg-cyber-card border-b border-cyber-border px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40 backdrop-blur-md bg-slate-900/90 font-sans">
+      {/* Event & System Status + Mobile Menu Trigger */}
+      <div className="flex items-center gap-3 text-xs">
+        <button
+          type="button"
+          onClick={toggleMobileMenu}
+          className="lg:hidden p-2 rounded-lg text-cyan-400 hover:bg-slate-800 border border-slate-700/60 transition-colors"
+          title="Open Navigation Menu"
+          aria-label="Open Navigation Menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <div className="flex items-center gap-2 font-mono">
-          <span className="text-gray-400 font-semibold">EVENT:</span>
+          <span className="text-gray-400 font-semibold hidden xs:inline">EVENT:</span>
           {selectedEvent ? (
             <>
               <EventStatusBadge status={selectedEvent.status} />
-              <span className="text-gray-300 font-bold hidden sm:inline max-w-[200px] truncate">{selectedEvent.name}</span>
+              <span className="text-gray-300 font-bold hidden sm:inline max-w-[160px] sm:max-w-[200px] truncate">{selectedEvent.name}</span>
             </>
           ) : (
             <span className="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded text-[10px]">

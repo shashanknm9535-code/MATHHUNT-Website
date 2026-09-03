@@ -110,7 +110,7 @@ export const RegistrationQR: React.FC<RegistrationQRProps> = ({
       {/* Printable QR Voucher Container */}
       <div
         ref={qrRef}
-        className="w-full max-w-sm p-6 rounded-2xl bg-gray-900/90 border border-cyan-500/30 shadow-xl shadow-cyan-500/10 text-center relative overflow-hidden backdrop-blur-md"
+        className="w-full max-w-[340px] sm:max-w-sm p-4 sm:p-6 rounded-2xl bg-gray-900/90 border border-cyan-500/30 shadow-xl shadow-cyan-500/10 text-center relative overflow-hidden backdrop-blur-md"
       >
         {/* Subtle background glow */}
         <div className="absolute -top-16 -left-16 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -131,15 +131,15 @@ export const RegistrationQR: React.FC<RegistrationQRProps> = ({
         {/* Team & Event Labels */}
         <div className="space-y-1 mb-4">
           <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Team Name</p>
-          <h3 className="text-xl font-bold text-white tracking-wide text-cyan-300">{teamName}</h3>
-          <p className="text-xs text-gray-400 font-mono mt-1">{eventName}</p>
+          <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide text-cyan-300 break-words">{teamName}</h3>
+          <p className="text-xs text-gray-400 font-mono mt-1 break-words">{eventName}</p>
         </div>
 
         {/* QR Vector Box */}
-        <div className="p-4 bg-white rounded-xl shadow-inner inline-block my-2 border-2 border-cyan-500">
+        <div className="p-3 sm:p-4 bg-white rounded-xl shadow-inner inline-block my-2 border-2 border-cyan-500">
           <svg
             viewBox="0 0 21 21"
-            className="w-44 h-44"
+            className="w-36 h-36 sm:w-44 sm:h-44"
             shapeRendering="crispEdges"
           >
             {grid.map((row, r) =>
@@ -164,7 +164,7 @@ export const RegistrationQR: React.FC<RegistrationQRProps> = ({
           <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-mono">
             REGISTRATION ID
           </span>
-          <span className="text-sm font-mono font-bold text-cyan-400 tracking-wider">
+          <span className="text-xs sm:text-sm font-mono font-bold text-cyan-400 tracking-wider break-all block">
             {registrationId}
           </span>
         </div>
