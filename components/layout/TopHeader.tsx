@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Clock, Server, User, LogOut, ShieldCheck, AlertTriangle, Menu } from 'lucide-react';
+import { Clock, Server, User, LogOut, ShieldCheck, AlertTriangle, Menu, Loader2 } from 'lucide-react';
 import { EventStatusBadge } from '@/components/ui/Badge';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEvent } from '@/lib/auth/EventContext';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 export const TopHeader: React.FC = () => {
   const [time, setTime] = useState<string>('');
   const { user, logout, isMockAuth } = useAuth();
-  const { selectedEvent } = useEvent();
+  const { events, selectedEvent, selectedEventId, setSelectedEventId, loadingEvents } = useEvent();
   const { toggleMobileMenu } = useSidebar();
   const mock = isMockMode() || isMockAuth;
   const baseUrl = getApiBaseUrl();
@@ -51,11 +51,26 @@ export const TopHeader: React.FC = () => {
 
         <div className="flex items-center gap-2 font-mono">
           <span className="text-gray-400 font-semibold hidden xs:inline">EVENT:</span>
-          {selectedEvent ? (
-            <>
-              <EventStatusBadge status={selectedEvent.status} />
-              <span className="text-gray-300 font-bold hidden sm:inline max-w-[160px] sm:max-w-[200px] truncate">{selectedEvent.name}</span>
-            </>
+          {loadingEvents ? (
+            <div className="flex items-center gap-1.5 text-cyan-400 font-mono text-[11px]">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Loading Events...</span>
+            </div>
+          ) : events.length > 0 ? (
+            <div className="flex items-center gap-2 bg-slate-950 border border-slate-700/80 px-2.5 py-1 rounded-lg text-gray-200">
+              {selectedEvent && <EventStatusBadge status={selectedEvent.status} />}
+              <select
+                value={selectedEventId}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+                className="bg-transparent text-cyan-300 font-bold focus:outline-none cursor-pointer text-xs max-w-[150px] sm:max-w-[220px] truncate"
+              >
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id} className="bg-slate-900 text-gray-200">
+                    {ev.name} ({ev.status})
+                  </option>
+                ))}
+              </select>
+            </div>
           ) : (
             <span className="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded text-[10px]">
               NO ACTIVE EVENT

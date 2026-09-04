@@ -48,8 +48,10 @@ export default function ViolationsPage() {
   }, [selectedEventId, page, typeFilter, mock]);
 
   useEffect(() => {
+    setViolations([]);
+    setSummary(null);
     fetchViolationsData();
-  }, [fetchViolationsData]);
+  }, [selectedEventId, fetchViolationsData]);
 
   return (
     <div className="space-y-6 font-sans text-xs">

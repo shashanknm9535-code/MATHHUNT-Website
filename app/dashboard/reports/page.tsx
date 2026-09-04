@@ -44,8 +44,10 @@ export default function ReportsPage() {
   }, [selectedEventId]);
 
   useEffect(() => {
+    setScoreReport(null);
+    setEventReport(null);
     fetchReports();
-  }, [fetchReports]);
+  }, [selectedEventId, fetchReports]);
 
   return (
     <div className="space-y-6 font-sans text-xs">

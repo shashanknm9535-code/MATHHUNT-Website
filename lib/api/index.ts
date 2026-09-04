@@ -29,6 +29,7 @@ import {
   TeamReportData,
   EventReportData,
   CreateEventDTO,
+  UpdateEventDTO,
   CreateTeamDTO,
   TeamDetailDTO,
   CreateRouteDTO,
@@ -167,6 +168,33 @@ export const eventApi = {
     }
     return fetchApi<Event>('/admin/events', {
       method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  async getEventById(id: string): Promise<ApiResponse<Event>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: MOCK_EVENT,
+      };
+    }
+    return fetchApi<Event>(`/admin/events/${id}`, {
+      method: 'GET',
+    });
+  },
+
+  async updateEvent(id: string, dto: UpdateEventDTO): Promise<ApiResponse<Event>> {
+    if (isMockMode()) {
+      return {
+        success: true,
+        isMockData: true,
+        data: { ...MOCK_EVENT, ...dto } as Event,
+      };
+    }
+    return fetchApi<Event>(`/admin/events/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify(dto),
     });
   },

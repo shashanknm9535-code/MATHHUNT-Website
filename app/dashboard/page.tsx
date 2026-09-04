@@ -60,9 +60,14 @@ export default function OverviewDashboardPage() {
     }
   }, [selectedEventId, selectedEvent, mock]);
 
-  // Re-fetch when selected event changes
+  // Re-fetch when selected event changes and clear stale metrics
   useEffect(() => {
     if (isAuthenticated || mock) {
+      if (!mock) {
+        setTeams([]);
+        setViolations([]);
+        setLoading(true);
+      }
       fetchOverviewData();
     }
   }, [selectedEventId, fetchOverviewData, isAuthenticated, mock]);

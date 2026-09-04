@@ -342,6 +342,27 @@ export interface CreateEventDTO {
   startTime: string;
   endTime: string;
   status: EventStatus;
+  isRegistrationOpen?: boolean;
+  eligibleYears?: string[];
+  sections?: Record<string, any>;
+  minTeamSize?: number;
+  maxTeamSize?: number;
+}
+
+export interface UpdateEventDTO {
+  name?: string;
+  organization?: string;
+  department?: string;
+  college?: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  status?: EventStatus;
+  isRegistrationOpen?: boolean;
+  eligibleYears?: string[];
+  sections?: Record<string, any>;
+  minTeamSize?: number;
+  maxTeamSize?: number;
 }
 
 export interface CreateTeamDTO {

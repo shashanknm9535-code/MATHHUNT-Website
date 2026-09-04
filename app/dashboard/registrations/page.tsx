@@ -309,6 +309,9 @@ export default function RegistrationsPage() {
 
   useEffect(() => {
     if (selectedEventId) {
+      setRosterItems([]);
+      setStats(null);
+      setSelectedReg(null);
       loadRoster(rosterPage, rosterSearch, rosterStatus);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

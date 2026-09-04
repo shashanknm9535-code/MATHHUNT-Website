@@ -36,8 +36,9 @@ export default function LeaderboardPage() {
   }, [selectedEventId]);
 
   useEffect(() => {
+    setLeaderboard([]);
     fetchLeaderboard();
-  }, [fetchLeaderboard]);
+  }, [selectedEventId, fetchLeaderboard]);
 
   return (
     <div className="space-y-6 font-sans text-xs">

@@ -44,25 +44,31 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setLoadingEvents(true);
     setEventsError(null);
-    const res = await eventApi.listEvents(1, 50);
+    const res = await eventApi.listEvents(1, 100);
     setLoadingEvents(false);
 
     if (res.success && res.data && Array.isArray(res.data.items) && res.data.items.length > 0) {
       const fetchedEvents = res.data.items;
       setEvents(fetchedEvents);
       setSelectedEventIdState((prev) => {
-        // Prefer: (1) current in-state value if valid, (2) localStorage value if valid, (3) first event
         const storedId =
           typeof window !== 'undefined'
             ? localStorage.getItem(EVENT_STORAGE_KEY) || ''
             : '';
         const candidateId = prev || storedId;
         const isValid = fetchedEvents.some((ev) => ev.id === candidateId);
-        return isValid ? candidateId : fetchedEvents[0].id;
+        const nextId = isValid ? candidateId : fetchedEvents[0].id;
+        if (typeof window !== 'undefined' && nextId) {
+          localStorage.setItem(EVENT_STORAGE_KEY, nextId);
+        }
+        return nextId;
       });
     } else {
       setEvents([]);
       setSelectedEventIdState('');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(EVENT_STORAGE_KEY);
+      }
       if (!res.success) {
         setEventsError(res.error || 'Failed to fetch active events from backend.');
       }
@@ -75,20 +81,25 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Persist selectedEventId to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && selectedEventId) {
-      localStorage.setItem(EVENT_STORAGE_KEY, selectedEventId);
+    if (typeof window !== 'undefined') {
+      if (selectedEventId) {
+        localStorage.setItem(EVENT_STORAGE_KEY, selectedEventId);
+      }
     }
   }, [selectedEventId]);
 
   const setSelectedEventId = (id: string) => {
     setSelectedEventIdState(id);
-    // Immediately persist so switching is reflected on next mount
-    if (typeof window !== 'undefined' && id) {
-      localStorage.setItem(EVENT_STORAGE_KEY, id);
+    if (typeof window !== 'undefined') {
+      if (id) {
+        localStorage.setItem(EVENT_STORAGE_KEY, id);
+      } else {
+        localStorage.removeItem(EVENT_STORAGE_KEY);
+      }
     }
   };
 
-  const selectedEvent = events.find((e) => e.id === selectedEventId) || (events.length > 0 ? events[0] : null);
+  const selectedEvent = events.find((e) => e.id === selectedEventId) || null;
 
   return (
     <EventContext.Provider
