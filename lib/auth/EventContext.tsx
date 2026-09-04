@@ -5,6 +5,8 @@ import { Event } from '@/types';
 import { eventApi, isMockMode } from '@/lib/api';
 import { MOCK_EVENT } from '@/lib/mock/mockData';
 
+const EVENT_STORAGE_KEY = 'mathhunt_selected_event_id';
+
 interface EventContextType {
   events: Event[];
   selectedEvent: Event | null;
@@ -46,10 +48,17 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setLoadingEvents(false);
 
     if (res.success && res.data && Array.isArray(res.data.items) && res.data.items.length > 0) {
-      setEvents(res.data.items);
+      const fetchedEvents = res.data.items;
+      setEvents(fetchedEvents);
       setSelectedEventIdState((prev) => {
-        const exists = res.data!.items.some((ev) => ev.id === prev);
-        return exists ? prev : res.data!.items[0].id;
+        // Prefer: (1) current in-state value if valid, (2) localStorage value if valid, (3) first event
+        const storedId =
+          typeof window !== 'undefined'
+            ? localStorage.getItem(EVENT_STORAGE_KEY) || ''
+            : '';
+        const candidateId = prev || storedId;
+        const isValid = fetchedEvents.some((ev) => ev.id === candidateId);
+        return isValid ? candidateId : fetchedEvents[0].id;
       });
     } else {
       setEvents([]);
@@ -64,8 +73,19 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchEvents();
   }, [fetchEvents]);
 
+  // Persist selectedEventId to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && selectedEventId) {
+      localStorage.setItem(EVENT_STORAGE_KEY, selectedEventId);
+    }
+  }, [selectedEventId]);
+
   const setSelectedEventId = (id: string) => {
     setSelectedEventIdState(id);
+    // Immediately persist so switching is reflected on next mount
+    if (typeof window !== 'undefined' && id) {
+      localStorage.setItem(EVENT_STORAGE_KEY, id);
+    }
   };
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) || (events.length > 0 ? events[0] : null);

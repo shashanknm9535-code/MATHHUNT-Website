@@ -43,7 +43,7 @@ export function removeStoredToken(): void {
 }
 
 export function getApiBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://mathlite-production.up.railway.app';
   return url.replace(/\/+$/, '');
 }
 
@@ -78,10 +78,19 @@ export async function fetchApi<T>(
   }
 
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     const statusCode = response.status;
 
@@ -145,10 +154,13 @@ export async function fetchApi<T>(
       isMockData: false,
     };
   } catch (err: any) {
+    const isTimeout = err.name === 'AbortError' || err.name === 'TimeoutError';
     return {
       success: false,
       statusCode: 0,
-      error: `Network Error: Could not connect to NestJS backend at ${baseUrl}. Ensure backend server is running and CORS is configured. (${err.message || 'Connection refused'})`,
+      error: isTimeout
+        ? `Request timeout: The NestJS backend at ${baseUrl} did not respond within 10 seconds. Check Railway deployment health.`
+        : `Network Error: Could not connect to NestJS backend at ${baseUrl}. Ensure backend server is running and CORS is configured. (${err.message || 'Connection refused'})`,
       isMockData: false,
     };
   }

@@ -250,7 +250,7 @@ export const teamsApi = {
     });
   },
 
-  async getTeamsList(): Promise<ApiResponse<Team[]>> {
+  async getTeamsList(eventId?: string): Promise<ApiResponse<Team[]>> {
     if (isMockMode()) {
       return {
         success: true,
@@ -258,7 +258,8 @@ export const teamsApi = {
         data: MOCK_TEAMS,
       };
     }
-    const res = await fetchApi<any>('/admin/teams', { method: 'GET' });
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    const res = await fetchApi<any>(`/admin/teams${query}`, { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
@@ -446,7 +447,7 @@ export const violationsApi = {
     };
   },
 
-  async getSummary(): Promise<ApiResponse<ViolationSummary>> {
+  async getSummary(eventId?: string): Promise<ApiResponse<ViolationSummary>> {
     if (isMockMode()) {
       return {
         success: true,
@@ -460,7 +461,8 @@ export const violationsApi = {
         },
       };
     }
-    return fetchApi<ViolationSummary>('/admin/violations/summary', { method: 'GET' });
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    return fetchApi<ViolationSummary>(`/admin/violations/summary${query}`, { method: 'GET' });
   },
 };
 
@@ -693,7 +695,7 @@ export const routesApi = {
     });
   },
 
-  async getRoutesList(): Promise<ApiResponse<Route[]>> {
+  async getRoutesList(eventId?: string): Promise<ApiResponse<Route[]>> {
     if (isMockMode()) {
       return {
         success: true,
@@ -701,7 +703,8 @@ export const routesApi = {
         data: MOCK_ROUTES,
       };
     }
-    const res = await fetchApi<any>('/admin/routes', { method: 'GET' });
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    const res = await fetchApi<any>(`/admin/routes${query}`, { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
@@ -768,7 +771,7 @@ export const locationsApi = {
     });
   },
 
-  async getLocationsList(): Promise<ApiResponse<Location[]>> {
+  async getLocationsList(eventId?: string): Promise<ApiResponse<Location[]>> {
     if (isMockMode()) {
       return {
         success: true,
@@ -776,7 +779,8 @@ export const locationsApi = {
         data: MOCK_LOCATIONS,
       };
     }
-    const res = await fetchApi<any>('/admin/locations', { method: 'GET' });
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    const res = await fetchApi<any>(`/admin/locations${query}`, { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
@@ -842,7 +846,7 @@ export const challengesApi = {
     });
   },
 
-  async getChallengesList(): Promise<ApiResponse<Challenge[]>> {
+  async getChallengesList(eventId?: string): Promise<ApiResponse<Challenge[]>> {
     if (isMockMode()) {
       return {
         success: true,
@@ -850,7 +854,8 @@ export const challengesApi = {
         data: MOCK_CHALLENGES,
       };
     }
-    const res = await fetchApi<any>('/admin/challenges', { method: 'GET' });
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    const res = await fetchApi<any>(`/admin/challenges${query}`, { method: 'GET' });
     if (!res.success) {
       return {
         success: false,
@@ -912,7 +917,7 @@ export const riddlesApi = {
     });
   },
 
-  async getRiddlesList(): Promise<ApiResponse<Riddle[]>> {
+  async getRiddlesList(eventId?: string): Promise<ApiResponse<Riddle[]>> {
     if (isMockMode()) {
       return {
         success: true,
@@ -920,7 +925,8 @@ export const riddlesApi = {
         data: MOCK_RIDDLES,
       };
     }
-    const res = await fetchApi<any>('/admin/riddles', { method: 'GET' });
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    const res = await fetchApi<any>(`/admin/riddles${query}`, { method: 'GET' });
     if (!res.success) {
       return {
         success: false,

@@ -8,9 +8,11 @@ import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { Modal } from '@/components/ui/Modal';
 import { routesApi, locationsApi, teamsApi, isMockMode } from '@/lib/api';
 import { Route, Location, Team, CreateRouteDTO, AddRouteStepDTO } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function RoutesPage() {
   const mock = isMockMode();
+  const { selectedEventId } = useEvent();
   const [routes, setRoutes] = useState<Route[]>(mock ? MOCK_ROUTES : []);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(mock ? MOCK_ROUTES[0] : null);
   const [locations, setLocations] = useState<Location[]>(mock ? MOCK_LOCATIONS : []);
@@ -28,7 +30,7 @@ export default function RoutesPage() {
 
   const [newRouteDTO, setNewRouteDTO] = useState<CreateRouteDTO>({
     name: 'Delta Matrix Route',
-    eventId: MOCK_EVENT.id,
+    eventId: selectedEventId || (mock ? MOCK_EVENT.id : ''),
   });
 
   const [newStepDTO, setNewStepDTO] = useState<AddRouteStepDTO>({
@@ -38,40 +40,54 @@ export default function RoutesPage() {
 
   const [assignTeamId, setAssignTeamId] = useState<string>('');
 
+  useEffect(() => {
+    if (selectedEventId) {
+      setNewRouteDTO((prev) => ({ ...prev, eventId: selectedEventId }));
+    }
+  }, [selectedEventId]);
+
   const fetchRoutesData = useCallback(async () => {
+    if (!mock && !selectedEventId) return;
     setLoading(true);
     setError(null);
     const [routesRes, locsRes, teamsRes] = await Promise.all([
-      routesApi.getRoutesList(),
-      locationsApi.getLocationsList(),
-      teamsApi.getTeamsList(),
+      routesApi.getRoutesList(selectedEventId || undefined),
+      locationsApi.getLocationsList(selectedEventId || undefined),
+      teamsApi.getTeamsList(selectedEventId || undefined),
     ]);
 
     setLoading(false);
 
     if (routesRes.success && routesRes.data) {
-      setRoutes(routesRes.data);
-      if (routesRes.data.length > 0 && !selectedRoute) {
-        setSelectedRoute(routesRes.data[0]);
-      }
+      const fetchedRoutes = routesRes.data;
+      setRoutes(fetchedRoutes);
+      setSelectedRoute((prev) => {
+        const stillExists = prev && fetchedRoutes.some((r) => r.id === prev.id);
+        return stillExists ? prev : (fetchedRoutes.length > 0 ? fetchedRoutes[0] : null);
+      });
+    } else {
+      setRoutes([]);
+      setSelectedRoute(null);
     }
     if (locsRes.success && locsRes.data) {
       setLocations(locsRes.data);
-      if (locsRes.data.length > 0 && !newStepDTO.locationId) {
+      if (locsRes.data.length > 0) {
         setNewStepDTO((prev) => ({ ...prev, locationId: locsRes.data![0].id }));
       }
     }
     if (teamsRes.success && teamsRes.data) {
       setTeams(teamsRes.data);
-      if (teamsRes.data.length > 0 && !assignTeamId) {
+      if (teamsRes.data.length > 0) {
         setAssignTeamId(teamsRes.data[0].id);
       }
     }
-  }, [assignTeamId, newStepDTO.locationId, selectedRoute]);
+  }, [selectedEventId, mock]);
 
   useEffect(() => {
+    setSelectedRoute(null);
+    setRoutes([]);
     fetchRoutesData();
-  }, [fetchRoutesData]);
+  }, [selectedEventId, fetchRoutesData]);
 
   const handleCreateRoute = async (e: React.FormEvent) => {
     e.preventDefault();

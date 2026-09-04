@@ -48,6 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const redirectToLogin = () => {
     removeStoredToken();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('mathhunt_selected_event_id');
+    }
     setUser(null);
     setIsAuthenticated(false);
     setIsMockAuth(false);

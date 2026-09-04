@@ -48,9 +48,10 @@ export default function TeamsPage() {
   }, [selectedEventId, newTeamDTO.eventId]);
 
   const fetchTeams = async () => {
+    if (!mock && !selectedEventId) return;
     setLoading(true);
     setError(null);
-    const res = await teamsApi.getTeamsList();
+    const res = await teamsApi.getTeamsList(selectedEventId || undefined);
     setLoading(false);
     if (res.success && res.data) {
       setTeams(Array.isArray(res.data) ? res.data : []);
@@ -62,9 +63,13 @@ export default function TeamsPage() {
     }
   };
 
+  // Initial fetch and refetch when selected event changes
   useEffect(() => {
     fetchTeams();
-  }, []);
+    // Clear stale data when switching events
+    setTeams([]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEventId]);
 
   const handleInspectTeam = async (id: string) => {
     setLoadingDetail(true);

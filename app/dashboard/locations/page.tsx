@@ -7,9 +7,11 @@ import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { Modal } from '@/components/ui/Modal';
 import { locationsApi, isMockMode } from '@/lib/api';
 import { Location, CreateLocationDTO } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function LocationsPage() {
   const mock = isMockMode();
+  const { selectedEventId } = useEvent();
   const [locations, setLocations] = useState<Location[]>(mock ? MOCK_LOCATIONS : []);
   const [loading, setLoading] = useState<boolean>(!mock);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -29,9 +31,10 @@ export default function LocationsPage() {
   });
 
   const fetchLocations = async () => {
+    if (!mock && !selectedEventId) return;
     setLoading(true);
     setError(null);
-    const res = await locationsApi.getLocationsList();
+    const res = await locationsApi.getLocationsList(selectedEventId || undefined);
     setLoading(false);
     if (res.success && res.data) {
       setLocations(res.data);
@@ -43,9 +46,12 @@ export default function LocationsPage() {
     }
   };
 
+  // Refetch when selected event changes
   useEffect(() => {
+    setLocations([]);
     fetchLocations();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEventId]);
 
   const handleCreateLocation = async (e: React.FormEvent) => {
     e.preventDefault();

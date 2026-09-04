@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Users,
@@ -19,7 +19,7 @@ import { EventStatusBadge, TeamStatusBadge, ViolationTypeBadge } from '@/compone
 import { MOCK_EVENT, MOCK_TEAMS, MOCK_VIOLATIONS } from '@/lib/mock/mockData';
 import { formatDate } from '@/lib/utils';
 import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
-import { eventApi, teamsApi, violationsApi, isMockMode } from '@/lib/api';
+import { teamsApi, violationsApi, isMockMode } from '@/lib/api';
 import { Event, Team, Violation } from '@/types';
 import { usePolling } from '@/lib/hooks/usePolling';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -27,7 +27,7 @@ import { useEvent } from '@/lib/auth/EventContext';
 
 export default function OverviewDashboardPage() {
   const { isAuthenticated } = useAuth();
-  const { selectedEvent } = useEvent();
+  const { selectedEvent, selectedEventId } = useEvent();
   const mock = isMockMode();
   const [event, setEvent] = useState<Event | null>(mock ? MOCK_EVENT : selectedEvent);
   const [teams, setTeams] = useState<Team[]>(mock ? MOCK_TEAMS : []);
@@ -36,20 +36,18 @@ export default function OverviewDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchOverviewData = useCallback(async () => {
+    if (!mock && !selectedEventId) return;
     setError(null);
-    const [eventsRes, teamsRes, violRes] = await Promise.all([
-      eventApi.listEvents(1, 1),
-      teamsApi.getTeamsList(),
-      violationsApi.getViolations(),
+    const [teamsRes, violRes] = await Promise.all([
+      teamsApi.getTeamsList(selectedEventId || undefined),
+      violationsApi.getViolations(1, 20, selectedEventId || undefined),
     ]);
 
     setLoading(false);
 
-    if (eventsRes.success && eventsRes.data?.items?.length) {
-      setEvent(eventsRes.data.items[0]);
-    } else if (!mock) {
-      setEvent(selectedEvent || null);
-    }
+    // Use selected event from context directly (already scoped)
+    setEvent(selectedEvent || null);
+
     if (teamsRes.success && teamsRes.data) {
       setTeams(Array.isArray(teamsRes.data) ? teamsRes.data : []);
     } else {
@@ -60,7 +58,14 @@ export default function OverviewDashboardPage() {
     } else {
       setViolations([]);
     }
-  }, []);
+  }, [selectedEventId, selectedEvent, mock]);
+
+  // Re-fetch when selected event changes
+  useEffect(() => {
+    if (isAuthenticated || mock) {
+      fetchOverviewData();
+    }
+  }, [selectedEventId, fetchOverviewData, isAuthenticated, mock]);
 
   const pollingInterval = parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS || '5000', 10);
   usePolling(fetchOverviewData, pollingInterval, isAuthenticated || mock);

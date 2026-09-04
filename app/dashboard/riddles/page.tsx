@@ -7,9 +7,11 @@ import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { Modal } from '@/components/ui/Modal';
 import { riddlesApi, locationsApi, isMockMode } from '@/lib/api';
 import { Riddle, Location, CreateRiddleDTO } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function RiddlesPage() {
   const mock = isMockMode();
+  const { selectedEventId } = useEvent();
   const [riddles, setRiddles] = useState<Riddle[]>(mock ? MOCK_RIDDLES : []);
   const [locations, setLocations] = useState<Location[]>(mock ? MOCK_LOCATIONS : []);
   const [loading, setLoading] = useState<boolean>(!mock);
@@ -30,11 +32,12 @@ export default function RiddlesPage() {
   });
 
   const fetchRiddlesData = useCallback(async () => {
+    if (!mock && !selectedEventId) return;
     setLoading(true);
     setError(null);
     const [riddlesRes, locsRes] = await Promise.all([
-      riddlesApi.getRiddlesList(),
-      locationsApi.getLocationsList(),
+      riddlesApi.getRiddlesList(selectedEventId || undefined),
+      locationsApi.getLocationsList(selectedEventId || undefined),
     ]);
     setLoading(false);
 
@@ -53,11 +56,12 @@ export default function RiddlesPage() {
         setRiddleDTO((prev) => ({ ...prev, destinationLocationId: locsRes.data![0].id }));
       }
     }
-  }, [riddleDTO.destinationLocationId]);
+  }, [selectedEventId, riddleDTO.destinationLocationId, mock]);
 
   useEffect(() => {
+    setRiddles([]);
     fetchRiddlesData();
-  }, [fetchRiddlesData]);
+  }, [selectedEventId, fetchRiddlesData]);
 
   const handleSaveRiddle = async (e: React.FormEvent) => {
     e.preventDefault();

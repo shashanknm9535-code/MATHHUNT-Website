@@ -7,9 +7,11 @@ import { formatDate } from '@/lib/utils';
 import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { violationsApi, isMockMode } from '@/lib/api';
 import { Violation, ViolationSummary } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function ViolationsPage() {
   const mock = isMockMode();
+  const { selectedEventId } = useEvent();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [summary, setSummary] = useState<ViolationSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(!mock);
@@ -20,12 +22,13 @@ export default function ViolationsPage() {
   const [totalCount, setTotalCount] = useState<number>(0);
 
   const fetchViolationsData = useCallback(async () => {
+    if (!mock && !selectedEventId) return;
     setLoading(true);
     setError(null);
 
     const [listRes, summaryRes] = await Promise.all([
-      violationsApi.getViolations(page, 20, undefined, undefined, typeFilter),
-      violationsApi.getSummary(),
+      violationsApi.getViolations(page, 20, selectedEventId || undefined, undefined, typeFilter),
+      violationsApi.getSummary(selectedEventId || undefined),
     ]);
 
     setLoading(false);
@@ -42,7 +45,7 @@ export default function ViolationsPage() {
     if (summaryRes.success && summaryRes.data) {
       setSummary(summaryRes.data);
     }
-  }, [page, typeFilter]);
+  }, [selectedEventId, page, typeFilter, mock]);
 
   useEffect(() => {
     fetchViolationsData();

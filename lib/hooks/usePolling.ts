@@ -5,6 +5,8 @@ import { useEffect, useRef } from 'react';
 /**
  * Custom polling hook that executes a callback at regular intervals.
  * Automatically cleans up intervals when unmounted or disabled.
+ * Guards against concurrent overlapping requests: if the previous invocation
+ * has not yet resolved, the next interval tick is skipped.
  */
 export function usePolling(
   callback: () => Promise<void> | void,
@@ -12,6 +14,7 @@ export function usePolling(
   enabled: boolean = true
 ): void {
   const savedCallback = useRef(callback);
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     savedCallback.current = callback;
@@ -20,13 +23,24 @@ export function usePolling(
   useEffect(() => {
     if (!enabled) return;
 
+    const runCallback = async () => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+      try {
+        await savedCallback.current();
+      } finally {
+        isFetchingRef.current = false;
+      }
+    };
+
     // Execute immediately on mount/enable
-    savedCallback.current();
+    runCallback();
 
-    const id = setInterval(() => {
-      savedCallback.current();
-    }, intervalMs);
+    const id = setInterval(runCallback, intervalMs);
 
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      isFetchingRef.current = false;
+    };
   }, [intervalMs, enabled]);
 }

@@ -8,9 +8,11 @@ import { ApiErrorMessage } from '@/components/ui/ApiErrorMessage';
 import { Modal } from '@/components/ui/Modal';
 import { challengesApi, isMockMode } from '@/lib/api';
 import { Challenge, CreateChallengeDTO } from '@/types';
+import { useEvent } from '@/lib/auth/EventContext';
 
 export default function ChallengesPage() {
   const mock = isMockMode();
+  const { selectedEventId } = useEvent();
   const [challenges, setChallenges] = useState<Challenge[]>(mock ? MOCK_CHALLENGES : []);
   const [loading, setLoading] = useState<boolean>(!mock);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -34,9 +36,10 @@ export default function ChallengesPage() {
   });
 
   const fetchChallenges = async () => {
+    if (!mock && !selectedEventId) return;
     setLoading(true);
     setError(null);
-    const res = await challengesApi.getChallengesList();
+    const res = await challengesApi.getChallengesList(selectedEventId || undefined);
     setLoading(false);
 
     if (res.success && res.data) {
@@ -50,8 +53,10 @@ export default function ChallengesPage() {
   };
 
   useEffect(() => {
+    setChallenges([]);
     fetchChallenges();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEventId]);
 
   const handleSaveChallenge = async (e: React.FormEvent) => {
     e.preventDefault();
