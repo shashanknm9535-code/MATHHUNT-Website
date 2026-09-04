@@ -1112,6 +1112,45 @@ export const registrationApi = {
 };
 
 /**
+ * Normalizes an AdminRegistrationItem from the backend response to ensure
+ * required nested relations (leader, members, emailStatus) are always present.
+ * The NestJS backend may omit the leader relation if the Prisma include is
+ * misconfigured or if the record was partially created. Rather than crashing,
+ * we provide safe defaults that surface the data integrity issue in the UI.
+ */
+function normalizeRegistrationItem(raw: any): AdminRegistrationItem {
+  const item = raw as AdminRegistrationItem;
+
+  // Ensure leader is always a valid object
+  if (!item.leader || typeof item.leader !== 'object') {
+    item.leader = {
+      name: '[Leader data unavailable]',
+      studentId: 'N/A',
+      email: 'N/A',
+      phone: 'N/A',
+      year: 'N/A',
+      section: 'N/A',
+    };
+  }
+
+  // Ensure members is always an array
+  if (!Array.isArray(item.members)) {
+    item.members = [];
+  }
+
+  // Ensure emailStatus is always a valid object
+  if (!item.emailStatus || typeof item.emailStatus !== 'object') {
+    item.emailStatus = {
+      registrationEmailSent: false,
+      activationEmailSent: false,
+      lastError: null,
+    };
+  }
+
+  return item;
+}
+
+/**
  * Admin Registration Check-In & Team Activation Service
  * Uses backend endpoints:
  *   GET  /admin/registrations?eventId=...           (list)
@@ -1184,7 +1223,7 @@ export const adminRegistrationApi = {
       success: true,
       statusCode: res.statusCode,
       isMockData: false,
-      data: res.data as AdminRegistrationItem,
+      data: normalizeRegistrationItem(res.data),
     };
   },
 
@@ -1271,11 +1310,13 @@ export const adminRegistrationApi = {
       };
     }
 
-    const items: AdminRegistrationItem[] = Array.isArray(res.data)
+    const rawItems: any[] = Array.isArray(res.data)
       ? res.data
       : Array.isArray(res.data?.items)
       ? res.data.items
       : [];
+
+    const items: AdminRegistrationItem[] = rawItems.map(normalizeRegistrationItem);
 
     const total = res.data?.total ?? items.length;
     const totalPages = (res.data?.totalPages ?? Math.ceil(total / limit)) || 1;
